@@ -1,8 +1,8 @@
+import PropTypes from 'prop-types'
 import Head from 'next/head'
 import { isConnectedToESS } from '../lib/elasticsearch'
 
-export default function ingest({isConnected, dataIngested, docCount}) {
-
+export default function ingest ({ isConnected, dataIngested, docCount }) {
   const ingestData = async event => {
     event.preventDefault()
     const res = await fetch('/api/ingestData', {
@@ -18,13 +18,13 @@ export default function ingest({isConnected, dataIngested, docCount}) {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       {(isConnected && dataIngested) && <DataIngested docCount={docCount}/>}
-      {(isConnected===true && dataIngested===false) && <IngestDataIntoESS ingestData={ingestData}/> }
-      {(isConnected=== false) && <ConfigureESS/>}
+      {(isConnected === true && dataIngested === false) && <IngestDataIntoESS ingestData={ingestData}/> }
+      {(isConnected === false) && <ConfigureESS/>}
     </div>
   )
 }
 
-export function IngestDataIntoESS(props) {
+export function IngestDataIntoESS (props) {
   return <div>
   <p className="text-center">You're connected to Elastic Cloud! Hit below button to ingest sample data.</p>
   <div className="text-center pt-2">
@@ -32,22 +32,24 @@ export function IngestDataIntoESS(props) {
       Ingest!
     </a>
   </div>
-</div>;
+</div>
 }
 
-export function DataIngested(props){
-  return ( 
+DataIngested.propTypes = {
+  docCount: PropTypes.number.isRequired
+}
+export function DataIngested (props) {
+  return (
         <div className="text-center text-2xl">
-            <p className="break-all tracking-normal max-w-xl leading-loose"> 
-                🎉 You've ingested <span className="animate-bounce text-red-800 font-bold">{props.docCount}</span> documents into Elasticsearch! 
+            <p className="break-all tracking-normal max-w-xl leading-loose">
+                🎉 You've ingested <span className="animate-bounce text-red-800 font-bold">{props.docCount}</span> documents into Elasticsearch!
                 <a href="/search" className="inline-block px-5 py-3 rounded-lg shadow-lg bg-blue-450 text-white tracking-wider font-semibold text-lg">Search 🔍</a>
-            </p> 
-        </div> 
-        );
-
+            </p>
+        </div>
+  )
 }
 
-export function ConfigureESS() {
+export function ConfigureESS () {
   return <div className="">
   <p className="text-2xl">
     It seems you have not configured Elasticsearch!
@@ -55,9 +57,9 @@ export function ConfigureESS() {
       Get started by editing <code className="pl-1 pr-1 bg-gray-200 rounded-md">env.local</code>
     </p>
   </p>
-</div>;
+</div>
 }
 
-export async function getServerSideProps() {
-    return isConnectedToESS()
+export async function getServerSideProps () {
+  return isConnectedToESS()
 }
