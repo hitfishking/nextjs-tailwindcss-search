@@ -1,19 +1,18 @@
-import { connectToElasticsearch } from "../../lib/elasticsearch"
+import { connectToElasticsearch } from '../../lib/elasticsearch'
 
-export default async function search(req, res) {
-
-    const client = await connectToElasticsearch()
-    const query = req.body
-    const { body } = await client.search({
-    index: 'my-index',
+export default async function search (req, res) {
+  const client = await connectToElasticsearch()
+  const query = req.body
+  const { body } = await client.search({
+    index: 'movies-index',
     body: {
-        query: {
-            match: {
-            title: query
-            }
+      query: {
+        match: {
+          title: query
         }
+      }
     }
-    })
-    let searchResults = body.hits.hits
-    res.status(200).json({searchResults})
-  }
+  })
+  const searchResults = body.hits.hits
+  res.status(200).json({ searchResults })
+}
