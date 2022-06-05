@@ -4,7 +4,7 @@ export default async function search (req, res) {
   const client = await connectToElasticsearch()
   const query = req.body
   const { body } = await client.search({
-    index: 'my-index',
+    index: 'movies-index',
     body: {
       query: {
         match: {

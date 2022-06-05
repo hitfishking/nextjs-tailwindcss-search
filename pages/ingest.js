@@ -3,7 +3,7 @@ import Head from 'next/head'
 import { isConnectedToESS } from '../lib/elasticsearch'
 
 export default function ingest ({ isConnected, dataIngested, docCount }) {
-  const ingestData = async event => {
+  const ingestData = async (event) => {
     event.preventDefault()
     const res = await fetch('/api/ingestData', {
       method: 'POST'
@@ -35,9 +35,6 @@ export function IngestDataIntoESS (props) {
 </div>
 }
 
-DataIngested.propTypes = {
-  docCount: PropTypes.number.isRequired
-}
 export function DataIngested (props) {
   return (
         <div className="text-center text-2xl">
@@ -47,6 +44,9 @@ export function DataIngested (props) {
             </p>
         </div>
   )
+}
+DataIngested.propTypes = {
+  docCount: PropTypes.number.isRequired
 }
 
 export function ConfigureESS () {

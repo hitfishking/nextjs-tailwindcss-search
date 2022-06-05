@@ -1,61 +1,65 @@
+import PropTypes from 'prop-types'
 import { useRef, useState } from 'react'
 import Head from 'next/head'
 import { IngestDataIntoESS, ConfigureESS } from '../pages/ingest'
 import { isConnectedToESS } from '../lib/elasticsearch'
 
-export default function search({isConnected,dataIngested }) {
+export default function search ({ isConnected, dataIngested }) {
+  let result
+  const textInput = useRef('')
+  const [results, setResults] = useState([])
 
-    let result
-    let textInput = useRef('');
-    const [results, setResults] = useState([])
-    const searchQuery = async event => {
-        event.preventDefault()
-        const query = textInput.current.value
-        const res = await fetch('/api/search', {
-            method: 'POST',
-            body: JSON.stringify(query),
-            headers: { 'Content-Type': 'application/json' }
-        })
+  const searchQuery = async (event) => { // 函数组件内再函数
+    event.preventDefault()
+    const query = textInput.current.value // 取被引用的dom的值.
+    const res = await fetch('/api/search', { // browser端访问服务器的推荐函数.
+      method: 'POST',
+      body: JSON.stringify(query),
+      headers: { 'Content-Type': 'application/json' }
+    })
+    result = await res.json() // result只是一个临时中转变量，真正的持久变量是hook变量results.
+    setResults(result.searchResults)
+  }
 
-        result = await res.json()
-        setResults(result.searchResults)
-    }
-
-
-    return (
-        <div className="bg-gray-300">
-            <Head>
-                <title>Search</title>
-                <link rel="icon" href="/favicon.ico" />
-            </Head>
-            {(isConnected && dataIngested) && <SearchPage textInput={textInput} searchQuery={searchQuery} results={results}/>}
-            {(isConnected===true && dataIngested===false) && <IngestDataIntoESS/> }
-            {(isConnected=== false) && <ConfigureESS/>}
-        </div>
-    )
-
+  return (
+			<div className="bg-gray-300">
+				<Head>
+					<title>Search</title>
+					<link rel="icon" href="/favicon.ico" />
+				</Head>
+				{/* 只在数据库中有内容时才显示SearchPage组件 */}
+				{(isConnected && dataIngested) && <SearchPage textInput={textInput} searchQuery={searchQuery} results={results}/>}
+				{(isConnected === true && dataIngested === false) && <IngestDataIntoESS/> }
+				{(isConnected === false) && <ConfigureESS/>}
+			</div>
+  )
 }
 
-function SearchPage(props)
-{
-    let results = props.results
-    return (
-        <div>
-            <SearchBar textInput={props.textInput} searchQuery={props.searchQuery} />
-            <SearchResults results={results}/> 
-        </div>
-    )
+function SearchPage (props) {
+  const results = props.results
+  return (
+			<div>
+				<SearchBar textInput={props.textInput} searchQuery={props.searchQuery} />
+				<SearchResults results={results}/>
+			</div>
+  )
+}
+SearchPage.propTypes = {
+  results: PropTypes.array,
+  textInput: PropTypes.object,
+  searchQuery: PropTypes.string.isRequired
 }
 
-
-function SearchBar(props) {
-
-    return (
+function SearchBar (props) {
+  return (
         <div className="top h-96 overflow-hidden flex items-center justify-center" >
             <div className="pt-2 relative mx-auto text-gray-600">
+                {/* 反向将input element存入textInput变量中 */}
                 <input ref={props.textInput} className="border-2 border-gray-300 bg-white h-10 w-96 px-5 pr-16 rounded-lg text-sm focus:outline-none"
                     type="search" name="search" placeholder="Search..." />
+                {/* 调用组件内定义的函数 */}
                 <a href="#" onClick={props.searchQuery} className="absolute right-0 top-0 mt-5 mr-4">
+                    {/* 放大镜svg图标 */}
                     <svg className="text-gray-600 h-4 w-4 fill-current" version="1.1" id="Capa_1" x="0px" y="0px"
                         viewBox="0 0 56.966 56.966"
                         width="512px" height="512px">
@@ -65,37 +69,40 @@ function SearchBar(props) {
                 </a>
             </div>
         </div>
-    )
-
+  )
+}
+SearchBar.propTypes = {
+  textInput: PropTypes.object,
+  searchQuery: PropTypes.string.isRequired
 }
 
-function SearchResults(props){
-
-    let results = props.results
-    return (
+function SearchResults (props) {
+  const results = props.results
+  return (
         <div className="grid grid-flow-col grid-rows-3 gap-4 justify-evenly">
-                {(
-                    results.map((element) => (
-                        <div key={element._id} className="rounded-lg bg-white shadow-lg">
-                            <div className="px-6 py-4">
-                                <h3 className="text-lg font-semibold text-gray-800">{element._source.title}</h3>
-                                <p className="text-gray-600"> {element._source.year}</p>
-                                <p className="text-gray-600"> {element._source.info.plot}</p>
-                                <p className="text-gray-600"> {element._source.info.directors}</p>
-                                <div className="text-brand-dark hover:text-brand font-semibold text-sm mt-4">
-                                    Rating {element._source.info.rating} / 10
-                                </div>
-                            </div>
-                        </div>
-                    ))
-                )}
-            </div>
+					{(
+						results.map((element) => (
+								<div key={element._id} className="rounded-lg bg-white shadow-lg">
+									<div className="px-6 py-4">
+										<h3 className="text-lg font-semibold text-gray-800">{element._source.title}</h3>
+										<p className="text-gray-600"> {element._source.year}</p>
+										<p className="text-gray-600"> {element._source.info.plot}</p>
+										<p className="text-gray-600"> {element._source.info.directors}</p>
+										<div className="text-brand-dark hover:text-brand font-semibold text-sm mt-4">
+												Rating {element._source.info.rating} / 10
+										</div>
+									</div>
+								</div>
+						))
+					)}
+        </div>
 
-    )
-
+  )
+}
+SearchResults.propTypes = {
+  results: PropTypes.array
 }
 
-
-export async function getServerSideProps() {
-    return isConnectedToESS()
+export async function getServerSideProps () {
+  return isConnectedToESS()
 }

@@ -8,7 +8,7 @@ export default async function ingestData (req, res) {
     datasource: createReadStream('./movies.json').pipe(split()),
     onDocument (doc) {
       return {
-        index: { _index: 'my-index' }
+        index: { _index: 'movies-index' }
       }
     },
     onDrop (doc) {
