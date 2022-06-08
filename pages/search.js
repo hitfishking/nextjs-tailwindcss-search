@@ -49,7 +49,7 @@ function SearchPage (props) {
 SearchPage.propTypes = {
   results: PropTypes.array,
   textInput: PropTypes.object,
-  searchQuery: PropTypes.string.isRequired
+  searchQuery: PropTypes.func.isRequired
 }
 
 function SearchBar (props) {
@@ -89,7 +89,7 @@ function SearchBar (props) {
 }
 SearchBar.propTypes = {
   textInput: PropTypes.object,
-  searchQuery: PropTypes.string.isRequired
+  searchQuery: PropTypes.func.isRequired
 }
 
 function SearchResults (props) {
