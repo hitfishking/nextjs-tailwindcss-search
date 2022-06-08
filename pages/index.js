@@ -1,7 +1,7 @@
 import Head from 'next/head'
 import Link from 'next/link'
 
-export default function Home() {
+export default function Home () {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen py-2">
       <Head>
@@ -73,7 +73,7 @@ export default function Home() {
           rel="noopener noreferrer"
         >
           Powered by{' '}
-          <img src="/elastic.svg" alt="Vercel Logo" className="p-1 h-9 ml-2" /><div className="p-2">&</div>  
+          <img src="/elastic.svg" alt="Vercel Logo" className="p-1 h-9 ml-2" /><div className="p-2">&</div>
           <img src="/vercel.svg" alt="Vercel Logo" className="h-5 ml-2" />
         </a>
       </footer>

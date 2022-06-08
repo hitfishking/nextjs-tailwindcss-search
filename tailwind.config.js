@@ -8,12 +8,12 @@ module.exports = {
         blue: {
           450: '#0077CC'
         },
-        'poppy': '#FA744E',
+        poppy: '#FA744E'
       }
-    },
+    }
   },
   variants: {
-    extend: {},
+    extend: {}
   },
-  plugins: [],
+  plugins: []
 }

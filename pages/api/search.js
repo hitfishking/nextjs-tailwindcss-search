@@ -3,6 +3,7 @@ import { connectToElasticsearch } from '../../lib/elasticsearch'
 export default async function search (req, res) {
   const client = await connectToElasticsearch()
   const query = req.body
+  // const query1 = 'sun'
   const { body } = await client.search({
     index: 'movies-index',
     body: {
