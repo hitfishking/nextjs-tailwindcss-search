@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types'
 import { useRef, useState } from 'react'
 import Head from 'next/head'
-import { IngestDataIntoESS, ConfigureESS } from '../pages/ingest'
+import { IngestDataIntoESS, ConfigureESS } from '../pages/ingest' // 可以从其他page中引入组件到本page中
 import { isConnectedToESS } from '../lib/elasticsearch'
 import styles from './search.module.scss'
 // console.log(styles)
