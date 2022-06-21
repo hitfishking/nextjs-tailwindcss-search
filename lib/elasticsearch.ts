@@ -21,7 +21,16 @@ export async function connectToElasticsearch () {
   })
 }
 
-export async function isConnectedToESS () {
+type ServerSideProps = {
+	props: {
+		isConnected: boolean;
+		dataIngested: boolean;
+		docCount: number;
+	}
+}
+
+// 该函数在search、indgest等page的getServerSideProps()中调用，用于准备page调用的参数对象props。
+export async function isConnectedToESS (): Promise<ServerSideProps> {
   let isConnected = false
   let dataIngested = false
   let docCount = 0
