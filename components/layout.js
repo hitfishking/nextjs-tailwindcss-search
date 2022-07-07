@@ -6,7 +6,7 @@ import Link from 'next/link'
 const name = 'Hitfishking'
 export const siteTitle = 'Next.js Sample Website'
 
-export default function Layout({ children, home }) {
+export default function Layout ({ children, home }) {
   return (
     <div className={styles.container}>
       <Head>
@@ -25,7 +25,8 @@ export default function Layout({ children, home }) {
         <meta name="twitter:card" content="summary_large_image" />
       </Head>
       <header className={styles.header}>
-        {home ? (
+        {home
+          ? (
           <>
             <img
               src="/images/profile.jpg"
@@ -34,7 +35,8 @@ export default function Layout({ children, home }) {
             />
             <h1 className={utilStyles.heading2Xl}>{name}</h1>
           </>
-        ) : (
+            )
+          : (
           <>
             <Link href="/">
               <a>
@@ -51,7 +53,7 @@ export default function Layout({ children, home }) {
               </Link>
             </h2>
           </>
-        )}
+            )}
       </header>
       <main>{children}</main>
       {!home && (
