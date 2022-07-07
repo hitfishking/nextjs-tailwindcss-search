@@ -1,0 +1,13 @@
+clone自：https://github.com/hitfishking/Next-JS-Landing-Page-Starter-Template
+demo：https://creativedesignsguru.com/demo/nextjs-landing-page/
+
+----------------------------------
+遇到的问题：
+1）babel插件styled-jsx-plugin-postcss，可以识别<style jsx>, 但编译时间过长，失败；原因不明；
+   目前只能去掉Button、FooterCopyright两个组件中的<style jsx>样式功能。
+	 [已解决]：经查，是该插件对tailwindcss模块的版本有要求，2.x不行，要3.x，原系统要求v3.0.17, 本地安装最新的v3.1.4。
+
+
+----------------------------------
+项目研究心得：
+1）
