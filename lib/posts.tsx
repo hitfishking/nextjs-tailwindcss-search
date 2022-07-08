@@ -3,10 +3,11 @@ import path from 'path'
 import matter from 'gray-matter'
 import { remark } from 'remark'
 import html from 'remark-html'
+import { IPostMeta } from '../types'
 
 const postsDirectory = path.join(process.cwd(), 'posts')
 
-export function getSortedPostsData () {
+export function getSortedPostsMeta () {
   // Get file names under /posts
   const fileNames = fs.readdirSync(postsDirectory)
   const allPostsData = fileNames.map((fileName) => {
@@ -26,8 +27,9 @@ export function getSortedPostsData () {
       ...matterResult.data
     }
   })
+
   // Sort posts by date
-  return allPostsData.sort((a, b) => {
+  return allPostsData.sort((a:IPostMeta, b:IPostMeta) => {
     if (a.date < b.date) {
       return 1
     } else {
