@@ -4,11 +4,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-		"test": "jest --watch",
-		"test:ci": "jest --ci"
+    "test": "jest --watch",
+    "test:ci": "jest --ci"
   },
   "dependencies": {
     "@elastic/elasticsearch": "latest",
+    "lodash": "^4.17.21",
     "next": "^12.1.6",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
