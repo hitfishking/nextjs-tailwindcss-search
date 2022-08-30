@@ -25,6 +25,12 @@ module.exports = {
     'react/react-in-jsx-scope': 'off',
     'react/no-unescaped-entities': 'off',
     'no-tabs': 'off',
-    'arrow-parens': ['error', 'always']
+    'arrow-parens': ['error', 'always'],
+    camelcase: 'off',
+    // '@typescript-eslint/camelcase': 'off',
+    'no-unused-vars': 'off',
+    'space-before-function-paren': 'error',
+    'no-mixed-spaces-and-tabs': 'off',
+    'no-use-before-define': 'off'
   }
 }

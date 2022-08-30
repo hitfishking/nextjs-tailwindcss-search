@@ -1,8 +1,8 @@
 import React from 'react'
 
-import Header from '../components/Header'
-import Board from '../components/Board'
-import Dashboard from '../components/Dashboard'
+import Header from './Header'
+import Board from './Board'
+import Dashboard from './Dashboard'
 
 export default function pageMJ () {
   return (
