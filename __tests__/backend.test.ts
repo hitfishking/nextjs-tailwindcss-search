@@ -1,43 +1,51 @@
 /* eslint-disable no-undef */
 import { board_start, board_start2, board_start3 } from './fixture/Board_Arr2D'
 import {
-  create_board,
-  get_train_heads,
-  helper_get_trainbody,
-  helper_move_trainbody,
-  train_walk,
+  get_trainheads,
+  get_trainbody,
+  move_trainbody,
+  train_roam,
   is_f2f,
   f2f_in_board,
   f2f_in_boards,
   find_all_chances
-} from '../libs/lib_base'
+} from '../helpers/hlp_yiyikan_backend'
 
 import {
   Board,
+  Board2,
   Cell,
-  Train_Head,
+  Head,
   Chances
-} from '@/types'
+} from '../types/I_YiYiKan'
 
-test('The starter board', () => {
-  const x1 = create_board()
-  // console.log(x1)
-  // expect(init_board()).toBe(['Blank'])
+test('Testing board_start', () => {
+  expect(board_start.length).toBe(11)
+  expect(board_start[1][2].name).toBe('BaWan')
+  expect(board_start[9][3].name).toBe('JiuBing')
+  expect(board_start[9][3].pos.x).toBe(9)
+  console.log(board_start[1][2])
 })
 
-test('Testing get_train_heads()', () => {
-  const train_heads = get_train_heads(board_start)
+test('Testing get_trainheads()', () => {
+  const train_heads = get_trainheads(board_start)
   console.log('train_heads are:')
   console.log(train_heads)
   console.log(train_heads.length)
   expect(train_heads.length).toBe(82)
 })
 
-test('Testing helper_get_tainbody()', () => {
-  const head: Train_Head = { pos: { x: 3, y: 6 }, direction: 'Right' }
+test('Testing get_tainbody()', () => {
+  const head: Head = {
+    cell: {
+      name: 'YiWan',
+      pos: { x: 3, y: 6 }
+    },
+    direction: 'Right'
+  }
 
   // 可以考虑先写测试，再写函数，测试确定了函数理想的对外接口模式.
-  const body = helper_get_trainbody(head, board_start)
+  const body = get_trainbody(head, board_start)
   // console.log('body is =====')
   // console.log(body)
   const res = [
@@ -51,17 +59,23 @@ test('Testing helper_get_tainbody()', () => {
   expect(body).toStrictEqual(res)
 })
 
-test('Testing helper_move_trainbody()', () => {
-  const direction = 'Right'
-  const train_body:Cell[] = [
-    { pos: { x: 3, y: 6 }, name: 'YiWan' },
-    { pos: { x: 3, y: 5 }, name: 'BaTiao' },
-    { pos: { x: 3, y: 4 }, name: 'DongFeng' },
-    { pos: { x: 3, y: 3 }, name: 'ErBing' },
-    { pos: { x: 3, y: 2 }, name: 'Zhong' },
-    { pos: { x: 3, y: 1 }, name: 'ErTiao' }
-  ]
-  const train_body_step_should = [
+test('Testing move_trainbody()', () => {
+  const head: Head = {
+    cell: {
+      name: 'YiWan',
+      pos: { x: 3, y: 6 }
+    },
+    direction: 'Right'
+  }
+  const head_stp_should: Head = {
+    cell: {
+      name: 'YiWan',
+      pos: { x: 3, y: 7 }
+    },
+    direction: 'Right'
+  }
+
+  const body_stp_should = [
     { pos: { x: 3, y: 7 }, name: 'YiWan' },
     { pos: { x: 3, y: 6 }, name: 'BaTiao' },
     { pos: { x: 3, y: 5 }, name: 'DongFeng' },
@@ -69,19 +83,16 @@ test('Testing helper_move_trainbody()', () => {
     { pos: { x: 3, y: 3 }, name: 'Zhong' },
     { pos: { x: 3, y: 2 }, name: 'ErTiao' }
   ]
-  const train_head_step_should = { pos: { x: 3, y: 7 }, direction: 'Right' }
 
-  const result = helper_move_trainbody(direction, train_body, board_start)
-  const board_step = result.board_step
-  const train_body_step = result.train_body_step
-  const train_head_step = result.train_head_step
+  const result = move_trainbody(head, board_start)
+  const board_stp = result.board_stp
+  const body_stp = result.body_stp
+  const head_stp = result.head_stp
 
-  // console.log(new_board)
-  // console.log(train_body_step)
-  console.log('====train_head_step=====')
-  console.log(train_head_step)
+  expect(body_stp).toStrictEqual(body_stp_should)
+  expect(head_stp).toStrictEqual(head_stp_should)
 
-  const res_board_row3 = [
+  const stped_board_row3_should = [
     'NO',
     'Blank',
     'ErTiao',
@@ -98,19 +109,14 @@ test('Testing helper_move_trainbody()', () => {
     'LiuWan',
     'DongFeng'
   ]
-  expect(board_step[3]).toStrictEqual(res_board_row3)
-  expect(train_body_step).toStrictEqual(train_body_step_should)
-  expect(train_head_step).toStrictEqual(train_head_step_should)
+  const res_arr = board_stp[3].map((cell) => { return cell.name })
+  expect(res_arr).toStrictEqual(stped_board_row3_should)
 })
 
-test('Testing train_walk()', () => {
-  const vboards = train_walk(board_start)
+test('Testing train_roam()', () => {
+  const vboards = train_roam(board_start)
   console.log('====vboards=====')
-  console.log(vboards.length)
-})
-
-test('Tesing print x,y cell of board', () => {
-  console.log(board_start[4][14])
+  console.log(vboards.length) // 127
 })
 
 test('Testing is_f2f()', () => {
@@ -132,7 +138,7 @@ test('Testing f2f_in_board()', () => {
   console.log('=====f2f=====')
   console.log(result.f2f_arr)
   console.log(result.f2f_arr.length)
-  console.log(result.f2f_names)
+  console.log(result.f2f_names) // Set
   expect(Array.from(result.f2f_names)).toEqual(['SanBing', 'YaoJi', 'JiuBing'])
   expect(result.f2f_names).toEqual(new Set(['SanBing', 'YaoJi', 'JiuBing']))
 })
@@ -150,8 +156,15 @@ test('Testing f2f_in_boards()', () => {
 
 test('Tesing find_all_chances()', () => {
   const result = find_all_chances(board_start)
-  console.log('~~~~~~~find all chances~~~~~~~~~~')
-  console.log(result.f2f_arr)
-  console.log(result.f2f_arr.length)
+  console.log('~~~~~~~board_start chances~~~~~~~~~~')
+  // console.log(result.f2f_arr)
+  // console.log(result.f2f_arr.length)
   console.log(result.f2f_names)
+  expect(result.f2f_names.size).toBe(1) // 1个chance
+
+  const result2 = find_all_chances(board_start2)
+  console.log('~~~~~~~board_start2 chances~~~~~~~~~~')
+  console.log(result2.f2f_names)
+  console.log(result2.f2f_arr.length)
+  expect(result2.f2f_names.size).toBe(3) // 3个chance
 })

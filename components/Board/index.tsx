@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react'
 
 import Card from '../Card'
 import { shuffleCards2, pick } from '../../helpers'
-import { useModel } from '../../libs/lib_usemodel'
+import { useModel } from '../../models/lib_usemodel'
 
 export default function Board () {
   const { curBoard, setCurBoard } = useModel('useGameModel', (model) => pick(model, 'curBoard', 'setCurBoard'))

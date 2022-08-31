@@ -1,8 +1,8 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable no-undef */
-import { shuffleCards, shuffleCards2 } from '../helpers/hlp_game'
+import { shuffleBoard, shuffleBoard2 } from '../helpers/hlp_yiyikan_shuffle'
 test('Testing shuffleCards()', () => {
-  const result = shuffleCards()
+  const result = shuffleBoard()
   console.log(result[135])
   // const abc = [136, 137, 138, 139].map((val) => {
   //   console.log(result[val])
@@ -16,6 +16,6 @@ test('Testing shuffleCards()', () => {
 })
 
 test('Testing shuffleCards2()', () => {
-  const result = shuffleCards2()
+  const result = shuffleBoard2()
   console.log(result.length)
 })

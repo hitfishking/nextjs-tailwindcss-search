@@ -2,4 +2,5 @@
 // 程序的任何部分都可能有对应的helper功能，分别建立独立的helper文件，便于识别和管理。
 export * from './hlp_card_names'
 export * from './hlp_game'
-export * from './hlp_model'
+export * from './hlp_yiyikan_backend'
+export * from './hlp_yiyikan_shuffle'

@@ -40,7 +40,7 @@ import NanFeng from '../assets/mj1/FengNan.jpg'
 import BeiFeng from '../assets/mj1/FengBei.jpg'
 
 // 上面import是定义卡片变量，以下是用这些变量建立一个key: value(变量名:变量值)的js数组。
-export const CARD_URLS = {
+export const IMG_URLS = {
   YaoJi,
   ErTiao,
   SanTiao,
@@ -77,6 +77,6 @@ export const CARD_URLS = {
   BeiFeng
 }
 
-export function getImage (name: keyof typeof CARD_URLS): string {
-  return CARD_URLS[name].src
+export function getImage (name: keyof typeof IMG_URLS): string {
+  return IMG_URLS[name].src
 }
