@@ -1,35 +1,33 @@
 /* eslint-disable array-callback-return */
 import React, { useEffect, useState } from 'react'
 
-import Card from '../Card'
-import { shuffleCards2, pick } from '../../helpers'
+import { pick } from '../../helpers'
 import { useModel } from '../../models/lib_usemodel'
+import Card from '../Card'
 
 export default function Board () {
-  const { curBoard, setCurBoard } = useModel('useGameModel', (model) => pick(model, 'curBoard', 'setCurBoard'))
+  // ??? 为何将selectCell()传递给<Card>使用，会导致该函数setLastCell(cell)不起作用? 代码基本保留，待以后研究。
+  const { curBoard, selectCell, lastCell, boardUuid, chances } = useModel('useGameModel', (model) => pick(model, 'curBoard', 'selectCell', 'lastCell', 'boardUuid', 'chances'))
 
-  // Model中只存储当前盘面二维数组(Board2类型)，将其映射为可视的<Card>集合，是<UserComp>组件的工作。
-  const allCardsComps = curBoard.map((aLine, idx1) => {
+  const allCards = curBoard.map((aLine, idx1) => {
+    console.log('--------CCCCC-------------')
     return aLine.map((cell, idx2) => {
       if (idx1 !== 0 && idx2 !== 0) {
-        return (
-					<Card key={cell.id} card={cell}/>
-        )
+        return <Card key={cell.id} cell={cell} onClickFunc={selectCell} />
       }
     })
   })
 
-  // 将CardDesk页单独保存起来,JSX中显示状态intiCards,以便解决Hydrate前后端不一致问题。
+  // 将render阶段得到的state先保存起来,在后联阶段在setState()一次，再render一次，可以解决Hydrate前后端不一致问题。
+  // 在后联阶段才改变状态槽，且只在mount时运行一次或在指定state变化时才运行，若无[]，会进入死循环!
   const [initCards, setInitCards] = useState(null)
-  useEffect(() => setInitCards(allCardsComps), [])
+  useEffect(() => setInitCards(allCards), [lastCell, chances])
 
   return (
-		<>
-			<h1>Board</h1>
-			{
-				initCards
-			}
-		</>
+		<div className="mt-[10px] w-full py-[10px] px-[5px] flex flex-wrap justify-center items-center">
+			{initCards}
+			{console.log('-----BBBB----------')}
+		</div>
   )
 }
 

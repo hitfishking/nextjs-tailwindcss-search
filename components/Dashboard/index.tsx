@@ -1,12 +1,12 @@
 import React from 'react'
 import ChanceInfo from './ChanceInfo'
-import PlayStatus from './PlayStatus'
+import ControlPanel from './ControlPanel'
 
 export default function Dashboard () {
   return (
-		<div style={{ display: 'flex' }}>
+		<div className='bg-yellow-200 flex'>
+			<ControlPanel/>
 			<ChanceInfo/>
-			<PlayStatus/>
 		</div>
   )
 }

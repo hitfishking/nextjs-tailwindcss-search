@@ -17,7 +17,7 @@ function shuffle (arr: any[]) {
   return newArr
 }
 
-function uuid (): string { // 一个32位16进制数
+export function uuid (): string { // 一个32位16进制数
   let result, i, j
   result = ''
   for (j = 0; j < 32; j++) {

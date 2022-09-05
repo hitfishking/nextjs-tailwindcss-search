@@ -6,16 +6,18 @@ type Position = {
   y: number
 }
 
+export type KeysType = keyof typeof IMG_URLS | 'Blank' | 'NO'
+
 export type Cell = {
 	id?: string
-	name: keyof typeof IMG_URLS | 'Blank' | 'NO' // card名限制在牌名列表内
+	name: KeysType // card名限制在牌名列表内
   pos: Position
 }
 
-export type Board = Array<Array< keyof typeof IMG_URLS | 'Blank' | 'NO'>>
+export type Board = Array<Array<KeysType>>
 export type Board2 = Array<Array<Cell>>
 
-type Direction = 'Right' | 'Left' | 'Up' | 'Down'
+export type Direction = 'Right' | 'Left' | 'Up' | 'Down'
 
 export type Head = {
 	cell: Cell,
@@ -25,6 +27,11 @@ export type Head = {
 export type Chances = {
   f2f_names: Set<string>
   f2f_arr: Array<[Cell, Cell]> // 同值牌对脸的机会可能不止一个，故机会中保留"脸对"数组。
+}
+
+export type AllChances = {
+	chances_derived: Chances,
+	chances_current: Chances
 }
 
 // -------------------------------

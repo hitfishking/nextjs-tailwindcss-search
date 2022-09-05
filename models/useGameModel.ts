@@ -1,39 +1,89 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { board_start } from '../__tests__/fixture/Board_Arr2D'
 import {
   Board2,
   Head,
   Cell,
   Chances,
+  AllChances,
   GAME_STATUS
 } from '../types/I_YiYiKan'
 
 import {
   get_trainheads,
   get_trainbody,
+  is_movable,
   move_trainbody,
   train_roam,
   is_f2f,
+  rm_f2f_pair,
   f2f_in_board,
   f2f_in_boards,
   find_all_chances
 } from '../helpers/hlp_yiyikan_backend'
-
 import { shuffleBoard2 } from '../helpers/hlp_yiyikan_shuffle'
 
+// [注意]:存储useGameModel()中各状态槽的fiber其实是<Provider>下的<Executor>的fiber;
+//       <Card>组件的fiber中存储的是<Executor>的fiber中的状态槽的子集的指针.
 export default function useGameModel () {
   const [curBoard, setCurBoard] = useState<Board2>(shuffleBoard2()) // 当前盘面,带初始化函数.
- 	const [lastCard, setLastCard] = useState<Cell>()
-  const [chances, setChances] = useState<Chances>(null)
+ 	const [lastCell, setLastCell] = useState<Cell>(null)
+  const [chances, setChances] = useState<AllChances>(find_all_chances(curBoard))
   const [gameStatus, setGameStatus] = useState(GAME_STATUS.READY)
+  const [showPanel, setShowPanel] = useState(true)
+  // ----------------------------
+  // 用户动作
+  // [注意]: useCallbck()存在闭包问题，故依赖的变量变化，fiber中存储的cb()函数也要相应更新，闭包中的变量才一致.
+  const selectCell = useCallback((cell:Cell) => {
+    // console.log('--selectCell():--lastCell, cell:---------')
+    // console.log(lastCell); console.log(cell)
+    // 以下是接收左牌的逻辑...
+    if (lastCell === null) {
+      if (cell.name === 'Blank') return // 左牌不允许是Blank
+      else {
+        setLastCell(cell); console.log('setted A: ' + cell.name); console.log(lastCell)
+        // Executor中的setState()，会导致Executor的状态变化，并当即将新状态update到dispatcher中，后者引发<UserComp>render。  本例实验证明：<UserComp>(<Card>)调用Executor中Model的selectCell()槽函数，改变Model状态，改变Executor中Model状态，update到dispatcher，并引发<Card>渲染，引发其中useEffect()中的setState(),引发<Card>重绘。
+        // ?? 为什是先运行useEffect(),调用了setState()后，才会render <Card>?
+        return
+      }
+    }
 
+    // 以下是接收右牌的逻辑...
+    if (lastCell === cell) return // 点击同一个cell无任何操作
+    if (cell.name === 'Blank') {
+      if (is_movable(lastCell, cell, curBoard)) { // 字-空，且可move
+        // alert('movable!')
+        setLastCell(null) // console.log('setted null 1-1.')
+        const newBoard:Board2 = move_trainbody(lastCell, cell, curBoard) // !! 将body移动到cell处..
+        setCurBoard(newBoard)
+        const newChances:AllChances = find_all_chances(newBoard)
+        setChances(newChances)
+        return
+      } else { // 字-空，但不可move
+        setLastCell(null) // console.log('setted null 1-2.')
+        return
+      }
+    }
+    if (lastCell.name === cell.name) {
+      if (is_f2f(cell, lastCell, curBoard)) { // 字-字，且对脸
+        // alert('face to face!')
+        setLastCell(null) // console.log('setted null 2-1.')
+        // 下面就是从board中消除此二card.
+        const newBoard = rm_f2f_pair(lastCell, cell, curBoard)
+        setCurBoard(newBoard)
+        const newChances:AllChances = find_all_chances(newBoard)
+        setChances(newChances)
+        return
+      } else {
+        setLastCell(null) // console.log('setted B: ' + cell.name)
+        return
+      }
+    }
+    if (lastCell.name !== cell.name) { // 剩余情况都在这个分支中. 非move，非对脸，直接清空.
+      setLastCell(null) // console.log('other branch... ')
+    }
+  }, [lastCell])
   // ----------------------------
   // 游戏宏观状态
-  const reset = useCallback(() => {
-    setGameStatus(GAME_STATUS.READY)
-    setCurBoard(shuffleBoard2())
-  }, [])
-
   const startGame = useCallback(() => {
     setGameStatus(GAME_STATUS.PLAYING)
   }, [])
@@ -42,29 +92,28 @@ export default function useGameModel () {
     setGameStatus(GAME_STATUS.PASS)
   }, [])
 
-  // ----------------------------
-  // playing状态中的子状态
-  const is_train_movable = useCallback(() => {
-
+  const reset = useCallback(() => {
+    setGameStatus(GAME_STATUS.READY)
+    const newBoard = shuffleBoard2()
+    setCurBoard(newBoard)
+    const newChances:AllChances = find_all_chances(newBoard)
+    setChances(newChances) // chances变化就会触发<Board>的useEffect() render.
   }, [])
 
-  const move_train = useCallback(() => {
-
-  }, [])
-
-  const is_f2f = useCallback(() => {
-
-  }, [])
-
-  const remove_f2f_cards = useCallback(() => {
-
-  }, [])
+  const switchChancesPanel = useCallback(() => {
+    setShowPanel(!showPanel)
+  }, [showPanel])
 
   return {
-    board_start,
     curBoard,
-    setCurBoard,
+	  lastCell,
     chances,
-    setChances
+    gameStatus,
+    selectCell,
+    startGame,
+    endGame,
+    reset,
+    showPanel,
+    switchChancesPanel
   }
 }

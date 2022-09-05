@@ -38,8 +38,8 @@ function Executor (props: ExecutorProps) {
   let data: any
   try {
     // 运行用户自定义Model() hook，返回结果状态集，存入data.
-    // 该hook函数是在Exector组件中运行的，则Model hook中建立的各种state数据槽应该在Executor组件的fiber中建立。
-    // 随后，将hook运行的结果状态集保存到context dispatcher对象中。
+    // 该hook函数是在Exector组件中运行的，则Model hook中建立的各种state状态槽应该在Executor组件的fiber中建立。
+    // 随后，立即将hook运行的结果状态集data，通过onUpdate()保存到context dispatcher对象中。
     // Executor本身并不存在能够改变其fiber中各个状态槽数据的方法，因此这些状态槽数据不会再变化，Executor自然不会被更新。
     data = hook()
   } catch (e) {
@@ -49,7 +49,7 @@ function Executor (props: ExecutorProps) {
     )
   }
 
-  useMemo(() => {
+  useMemo(() => { // 使用useMemo()可能是为了在render阶段内，直接将data更新到dispatcher中；而下面的useEffect()则
     updateRef.current(data) // 只在mount时运行一次，将data对象update到context中的dispatcher对象中.
   }, [])
 
@@ -97,15 +97,15 @@ export function Provider (props: {
 
 // 这个版本的useModel(), selector是any，简单很多；且函数返回值没做任何规定(默认也是any)，约束少了很多。
 // useModel就是通过useContext,取得vdom树上部的context provider中的dispatcher数据，
-// dispather中的数据通过namespace分组，并可通过useModel从外部传入的selector裁剪为精准子集返回。
+// dispather中的数据通过namespace分组，并可通过useModel从外部传入的selector裁剪为精准子集返回到下层使用useModel的用户组件中。
 // 注意1：用户Model hook函数其实是在Executor组件中运行的，其状态槽都建立在Executor的fiber中；然后将状态槽集合的引用存到dispatcher中；
 //       使用useModel引入用户model hook的那个下层应用组件，会存储必要的useContext状态槽，但并不会存储用户model hook的状态槽；
-//       而是通过selector，对已经被Exector存储到dispatcher的状态槽集合进行裁剪，然后建立到本下层应用组件中，体现在其fiber中；
+//       而是通过selector，对已经被Exector存储到dispatcher的状态槽集合进行裁剪，然后建立本下层应用组件的状态槽中，体现在其fiber中；
 //       这些被裁剪后的状态槽的集合，在本下层组件中就是一个状态槽：state;
 //       当用户与本下层组件交互时，可以使用该state中的值，也可以调用该state中提供的用户model函数，通过外部事件函数调用，
 //       如onClick={()=>flipClick(value)},实现该用户下层组件的功能；
 //       Model中的状态函数实际上是存储在Executor组件的fiber中的，被context dispatcher对象引用，进而通过useModel()被该用户下层组件引用；
-//       调用Model状态函数，实际上是调用Executor fiber中的函数，改变了Executor状态槽，进而改变了Context dispatcher，引发下层用户组件的更新。
+//       调用Model槽函数，实际上是调用Executor fiber中的函数，改变了Executor状态槽，进而改变了Context dispatcher，引发下层用户组件的更新。
 export function useModel (namespace: string, selector?: any) {
   const { dispatcher } = useContext<{ dispatcher: Dispatcher }>(Context)
   const selectorRef = useRef(selector)
@@ -138,6 +138,9 @@ export function useModel (namespace: string, selector?: any) {
     // cb()就是由各个<UserComp>注册的side effect函数中定义的handler函数，调用入口在各<UserComp>侧(通过调用Update())，
     // 目的就是根据最新的dispatcher.namespace.data，更新<UserComp>组件的依赖state。
     const handler = (data: any) => {
+      // console.log('---------【setState(currentState)1】-----------------')
+      // ?为什么上面这句会导致死循环?!
+      //
       if (!isMount.current) {
         setTimeout(() => {
           dispatcher.data[namespace] = data
@@ -156,11 +159,14 @@ export function useModel (namespace: string, selector?: any) {
         const currentState = selectorRef.current
           ? selectorRef.current(data)
           : data
+        // console.log('---------【setState(currentState)11】-----------------')
+        // ??此句也会死循环?
         const previousState = stateRef.current
         if (!isEqual(currentState, previousState)) {
           // !必须要有调用该函数的地方，才能有机会改变state；但要在side effect函数中调用，而不能直接在hook中调用。
           //
           setState(currentState)
+          console.log('---------【setState(currentState)2】-----------------')
         }
       }
     }

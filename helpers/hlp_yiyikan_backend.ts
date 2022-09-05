@@ -7,8 +7,10 @@ import {
   Board2,
   Cell,
   Head,
+  Direction,
   Chances
 } from '../types/I_YiYiKan'
+import { uuid } from './hlp_yiyikan_shuffle'
 
 // 扫描整个盘面，对每个Blank cell，分析其四个方向的相邻cell，构建listHeads数组.
 export function get_trainheads (board:Board2):Head[] {
@@ -101,24 +103,55 @@ export function get_trainbody (
   return body
 }
 
-type MoveStepProps = {
+type MoveStpResultType = {
 	head_stp: Head,
   body_stp: Cell[],
   board_stp: Board2
 }
 
+export function is_movable (cell1:Cell, cell2:Cell, board:Board2):boolean {
+  if (cell1.name === 'Blank' || cell2.name !== 'Blank') return false
+  if (cell1.pos.x !== cell2.pos.x && cell1.pos.y !== cell2.pos.y) return false // 不同行不同列,false
+  const [x1, x2, y1, y2] = [cell1.pos.x, cell2.pos.x, cell1.pos.y, cell2.pos.y]
+  const arrCell:Cell[] = []
+
+  // 提取区间内的全部 Cell.
+  if (x1 !== x2) { // 不同行，则同列
+    if (x1 < x2) {
+      for (let i = x1 + 1; i < x2; i++) arrCell.push(board[i][y1])
+    } else {
+      for (let i = x2 + 1; i < x1; i++) arrCell.push(board[i][y1])
+    }
+  }
+  if (y1 !== y2) { // 不同列，则同行
+    if (y1 < y2) {
+      for (let j = y1 + 1; j < y2; j++) arrCell.push(board[x1][j])
+    } else {
+      for (let j = y2 + 1; j < y1; j++) arrCell.push(board[x1][j])
+    }
+  }
+
+  let iCountNotBlank = 0
+  arrCell.forEach((cell) => {
+    if (cell.name !== 'Blank') iCountNotBlank++
+  })
+  if (iCountNotBlank === 0) return true; else return false
+}
+
 // 给定盘面上的一个head，整个body在head.direction方向移动一步，返回新的board+head+body。
-export function move_trainbody (
+// [注意]: 移动是在clone的虚拟盘面上进行的，并不改变原盘面，故称这种移动为虚拟的，即"v"的含义.
+export function move_trainbody_vstp (
   head: Head,
   board: Board2
-): MoveStepProps {
+): MoveStpResultType {
   const body: Cell[] = get_trainbody(head, board) // body是对原board中cell的引用.
   const body_stp: Cell[] = []
   const head_stp: Head = head // 初始暂赋值为原盘head,后续会被赋值为克隆的cell.
   const board_stp: Board2 = _.cloneDeep(board) // 复制一份board
 
   body.forEach((cell, idx) => {
-    const cln_cell = _.cloneDeep(cell) // 对原盘面上的cell进行复制.
+    const cln_cell:Cell = _.cloneDeep(cell) // 对原盘面上的cell进行复制.
+    // cln_cell.id = uuid() // 为每个新clone的cell生成新的id.
     const [x, y] = [cln_cell.pos.x, cln_cell.pos.y]
 
     switch (head.direction) {
@@ -163,6 +196,53 @@ export function move_trainbody (
   }
 }
 
+// 给定当前盘面的一对(cell1，cell2)，将以cell1为head的body直接移动到cell2处，此操作直接改变原盘面.
+// [注意]: 本移动是基于用户操作，直接对原盘面的改变，与move_trainbody_vstp()进行的虚拟模拟计算只在clone后的盘面上做改变是完全不同的，二者代码是独立开发的。
+export function move_trainbody (cell1:Cell, cell2:Cell, board:Board2):Board2 {
+  if (!is_movable(cell1, cell2, board)) { return board }
+  const [x1, y1, x2, y2] = [cell1.pos.x, cell1.pos.y, cell2.pos.x, cell2.pos.y]
+
+  // 首先确定方向，进而取得body
+  let direction:Direction
+  let nDist = 0
+  if (x1 !== x2) { // 不同行,同列
+    if (x1 < x2) 	{ direction = 'Down'; nDist = x2 - x1 } else { direction = 'Up'; nDist = x1 - x2 }
+  }
+  if (y1 !== y2) { // 不同列,同行
+    if (y1 < y2) { direction = 'Right'; nDist = y2 - y1 } else { direction = 'Left'; nDist = y1 - y2 }
+  }
+  const head:Head = { cell: cell1, direction }
+  const body:Cell[] = get_trainbody(head, board)
+
+  // 将body内的所有元素，按方向和距离，移动特定的距离.
+  body.forEach((cell) => {
+    const [x, y] = [cell.pos.x, cell.pos.y]
+    const cln_cell = _.cloneDeep(cell)
+    switch (direction) {
+      case 'Right':
+        cln_cell.pos.y += nDist
+        board[x][y + nDist] = cln_cell
+        break
+      case 'Left':
+        cln_cell.pos.y -= nDist
+        board[x][y - nDist] = cln_cell
+        break
+      case 'Up':
+        cln_cell.pos.x -= nDist
+        board[x - nDist][y] = cln_cell
+        break
+      case 'Down':
+        cln_cell.pos.x += nDist
+        board[x + nDist][y] = cln_cell
+        break
+    }
+    cell.name = 'Blank'
+    cell.id = uuid() // 移动cell，若原cell只是把name改成Blank，id并没改，导致盘面上出现重复id
+  })
+
+  return board
+}
+
 // 给定一个盘面board，遍历每一种可能的走法，生成walk_vboards[]数组.
 export function train_roam (board: Board2): Board2[] {
   const listHeads = get_trainheads(board)
@@ -177,8 +257,8 @@ export function train_roam (board: Board2): Board2[] {
         // 向右侧循环移动，走完所有Blank cell，每一步生成一个新board和新body.
         // x,y变化和判别，都是基于初始盘面.
         while (y < 14 && board[x][y + 1].name === 'Blank') {
-          const result = move_trainbody(head_stp, board_stp)
-          board_stp = result.board_stp // 这两个变量已经在move_trainbody()内clone完毕
+          const result = move_trainbody_vstp(head_stp, board_stp)
+          board_stp = result.board_stp // 这两个变量已经在move_trainbody_vstp()内部已clone完毕
           head_stp = result.head_stp
           walk_vboards.push(board_stp) // 把新的,独立的board保存到总数组中.
           y = y + 1
@@ -187,7 +267,7 @@ export function train_roam (board: Board2): Board2[] {
 
       case 'Left':
         while (y > 1 && board[x][y - 1].name === 'Blank') {
-          const result = move_trainbody(head_stp, board_stp)
+          const result = move_trainbody_vstp(head_stp, board_stp)
           board_stp = result.board_stp
           head_stp = result.head_stp
           walk_vboards.push(board_stp)
@@ -197,7 +277,7 @@ export function train_roam (board: Board2): Board2[] {
 
       case 'Down':
         while (x < 10 && board[x + 1][y].name === 'Blank') {
-          const result = move_trainbody(head_stp, board_stp)
+          const result = move_trainbody_vstp(head_stp, board_stp)
           board_stp = result.board_stp
           head_stp = result.head_stp
           walk_vboards.push(board_stp)
@@ -207,7 +287,7 @@ export function train_roam (board: Board2): Board2[] {
 
       case 'Up':
         while (x > 1 && board[x - 1][y].name === 'Blank') {
-          const result = move_trainbody(head_stp, board_stp)
+          const result = move_trainbody_vstp(head_stp, board_stp)
           board_stp = result.board_stp
           head_stp = result.head_stp
           walk_vboards.push(board_stp)
@@ -219,46 +299,55 @@ export function train_roam (board: Board2): Board2[] {
   return walk_vboards
 }
 
-// 判断盘面上两个同值的cell是否对脸.
+// 给定盘面上的2个cell，判断二者是否对脸.
 export function is_f2f (cell1: Cell, cell2: Cell, board:Board2): boolean {
+  const [x1, x2, y1, y2] = [cell1.pos.x, cell2.pos.x, cell1.pos.y, cell2.pos.y]
   if (cell1.name !== cell2.name) return false
-  if (cell1.pos.x !== cell2.pos.x && cell1.pos.y !== cell2.pos.y) return false // 必须同行或同列
+  if (x1 !== x2 && y1 !== y2) return false // 必须同行或同列
 
-  if (cell1.pos.x === cell2.pos.x) { // 同行
-    let y1, y2
-    if (cell1.pos.y < cell2.pos.y) {
-      [y1, y2] = [cell1.pos.y, cell2.pos.y]
-    } else {
-      [y1, y2] = [cell2.pos.y, cell1.pos.y]
-    }
+  if (x1 === x2) { // 同行
+    const [yt1, yt2] = (y1 < y2) ? [y1, y2] : [y2, y1]
 
     let nNoBlankCount = 0
-    for (let j = y1 + 1; j < y2; j++) { // (y1,y2)开区间
-      if (board[cell1.pos.x][j].name !== 'Blank') nNoBlankCount++
+    for (let j = yt1 + 1; j < yt2; j++) { // (yt1,yt2)开区间
+      if (board[x1][j].name !== 'Blank') nNoBlankCount++
     }
     if (nNoBlankCount === 0) return true
     else return false
   }
-
-  if (cell1.pos.y === cell2.pos.y) { // 同列
-    let x1, x2
-    if (cell1.pos.x < cell2.pos.x) {
-      [x1, x2] = [cell1.pos.x, cell2.pos.x]
-    } else {
-      [x1, x2] = [cell2.pos.x, cell1.pos.x]
-    }
+  if (y1 === y2) { // 同列
+    const [xt1, xt2] = (x1 < x2) ? [x1, x2] : [x2, x1]
 
     let nNoBlankCount = 0
-    for (let i = x1 + 1; i < x2; i++) {
-      if (board[i][cell1.pos.y].name !== 'Blank') nNoBlankCount++
+    for (let i = xt1 + 1; i < xt2; i++) { // 开区间
+      if (board[i][y1].name !== 'Blank') nNoBlankCount++
     }
     if (nNoBlankCount === 0) return true
     else return false
   }
 }
 
+// 将2个满足f2f的cell从盘面上清除，用新生成的Blank cell替代.
+export function rm_f2f_pair (cell1:Cell, cell2:Cell, board:Board2):Board2 {
+  if (!is_f2f(cell1, cell2, board)) return board
+  const [x1, y1, x2, y2] = [cell1.pos.x, cell1.pos.y, cell2.pos.x, cell2.pos.y]
+  const cell1_new:Cell = {
+    id: uuid(),
+    name: 'Blank',
+    pos: { x: x1, y: y1 }
+  }
+  const cell2_new:Cell = {
+    id: uuid(),
+    name: 'Blank',
+    pos: { x: x2, y: y2 }
+  }
+  board[x1][y1] = cell1_new
+  board[x2][y2] = cell2_new
+  return board
+}
+
 // 找到给定盘面上所有的对脸cell.
-export function f2f_in_board (board: Board2) {
+export function f2f_in_board (board: Board2):Chances {
   const f2f_arr: Array<[Cell, Cell]> = []
 
   for (let i = 1; i <= 10; i++) {
@@ -276,7 +365,7 @@ export function f2f_in_board (board: Board2) {
             }
           }
         }
-        // 判断盘面上所有与当前cell同值的cell是否有一个与当前cell对脸儿，有则放入f2f_arr数组.
+        // 判断盘面上当前cell1是否与其同值的各cell2对脸，是则[cell1,cell2]对儿加入f2f_arr数组.
         arrSame.forEach((cell2) => {
           if (is_f2f(cell1, cell2, board)) {
 						 f2f_arr.push([cell1, cell2])
@@ -286,7 +375,7 @@ export function f2f_in_board (board: Board2) {
     }
   } // for i
 
-  const f2f_names = new Set()
+  const f2f_names = new Set<string>()
   for (let p = 0; p < f2f_arr.length; p++) {
     f2f_names.add(f2f_arr[p][0].name) // 因为发f2f_names是集合,所以自动去重.
   }
@@ -295,14 +384,14 @@ export function f2f_in_board (board: Board2) {
 }
 
 // 给定一个盘面集合，找出所有对脸cell.
-export function f2f_in_boards (boards: Board2[]) {
+export function f2f_in_boards (boards: Board2[]):Chances {
   let f2f_arr: Array<[Cell, Cell]> = []
-  let f2f_names = new Set()
+  let f2f_names = new Set<string>()
 
   boards.forEach((board) => {
     const res = f2f_in_board(board)
     f2f_arr = f2f_arr.concat(res.f2f_arr) // 相邻的boards间该数组接近，但都被concat，导致该数组变长.
-    f2f_names = new Set([...f2f_names, ...res.f2f_names])
+    f2f_names = new Set<string>([...f2f_names, ...res.f2f_names])
   })
 
   return { f2f_names, f2f_arr }
@@ -313,8 +402,10 @@ export function f2f_in_boards (boards: Board2[]) {
  * @param  {Board2} board
  * @return {f2f_names, f2f_arr}
  */
-export function find_all_chances (board: Board2) {
-  const all_boards = [...train_roam(board), board]
-  const chances = f2f_in_boards(all_boards)
-  return chances
+export function find_all_chances (board: Board2):{chances_derived:Chances, chances_current:Chances} {
+  const derived_boards = train_roam(board)
+  // const all_boards = [...derived_boards, board]
+  const chances_derived:Chances = f2f_in_boards(derived_boards)
+  const chances_current:Chances = f2f_in_boards([board])
+  return { chances_derived, chances_current }
 }
