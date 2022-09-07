@@ -138,6 +138,16 @@ export function is_movable (cell1:Cell, cell2:Cell, board:Board2):boolean {
   if (iCountNotBlank === 0) return true; else return false
 }
 
+export function is_boardcleared (board:Board2):boolean {
+  let nNoBlank = 0
+  for (let x = 1; x <= 10; x++) {
+    for (let y = 1; y <= 14; y++) {
+      if (board[x][y].name !== 'Blank') nNoBlank++
+    }
+  }
+  if (nNoBlank === 0) return true; else return false
+}
+
 // 给定盘面上的一个head，整个body在head.direction方向移动一步，返回新的board+head+body。
 // [注意]: 移动是在clone的虚拟盘面上进行的，并不改变原盘面，故称这种移动为虚拟的，即"v"的含义.
 export function move_trainbody_vstp (
@@ -243,6 +253,61 @@ export function move_trainbody (cell1:Cell, cell2:Cell, board:Board2):Board2 {
   return board
 }
 
+// 和move_trainbody()类似，只是body用[head cell]替代，只移动head cell，body按兵不动；
+// 单枪匹马模式
+export function move_trainhead (cell1:Cell, cell2:Cell, board:Board2):Board2 {
+  if (!is_movable(cell1, cell2, board)) { return board }
+  const [x1, y1, x2, y2] = [cell1.pos.x, cell1.pos.y, cell2.pos.x, cell2.pos.y]
+
+  // 首先确定方向，进而取得body
+  let direction:Direction
+  let nDist = 0
+  if (x1 !== x2) { // 不同行,同列
+    if (x1 < x2) 	{ direction = 'Down'; nDist = x2 - x1 } else { direction = 'Up'; nDist = x1 - x2 }
+  }
+  if (y1 !== y2) { // 不同列,同行
+    if (y1 < y2) { direction = 'Right'; nDist = y2 - y1 } else { direction = 'Left'; nDist = y1 - y2 }
+  }
+  // const head:Head = { cell: cell1, direction }
+  const body:Cell[] = [cell1] // get_trainbody(head, board) 主要改了这2条代码
+
+  // 将body内的所有元素，按方向和距离，移动特定的距离.
+  body.forEach((cell) => {
+    const [x, y] = [cell.pos.x, cell.pos.y]
+    const cln_cell = _.cloneDeep(cell)
+    switch (direction) {
+      case 'Right':
+        cln_cell.pos.y += nDist
+        board[x][y + nDist] = cln_cell
+        break
+      case 'Left':
+        cln_cell.pos.y -= nDist
+        board[x][y - nDist] = cln_cell
+        break
+      case 'Up':
+        cln_cell.pos.x -= nDist
+        board[x - nDist][y] = cln_cell
+        break
+      case 'Down':
+        cln_cell.pos.x += nDist
+        board[x + nDist][y] = cln_cell
+        break
+    }
+    board[x][y].name = 'Blank'
+    board[x][y].id = uuid()
+
+    // body不是通过get_trainbody()从原board引用过来的，而是独立的参数，故本move_trainhead()函数中，不能使用cell1，而要显式向board的元素赋值.
+    // cell.name = 'Blank'
+    // cell.id = uuid() // 移动cell，若原cell只是把name改成Blank，id并没改，导致盘面上出现重复id
+  })
+
+  // console.log('----cell1------')
+  // console.log(cell1)
+  // console.log('-------board[x][y]---------')
+  // console.log(board[x][y])
+  return board
+}
+
 // 给定一个盘面board，遍历每一种可能的走法，生成walk_vboards[]数组.
 export function train_roam (board: Board2): Board2[] {
   const listHeads = get_trainheads(board)
@@ -330,6 +395,26 @@ export function is_f2f (cell1: Cell, cell2: Cell, board:Board2): boolean {
 // 将2个满足f2f的cell从盘面上清除，用新生成的Blank cell替代.
 export function rm_f2f_pair (cell1:Cell, cell2:Cell, board:Board2):Board2 {
   if (!is_f2f(cell1, cell2, board)) return board
+  const [x1, y1, x2, y2] = [cell1.pos.x, cell1.pos.y, cell2.pos.x, cell2.pos.y]
+  const cell1_new:Cell = {
+    id: uuid(),
+    name: 'Blank',
+    pos: { x: x1, y: y1 }
+  }
+  const cell2_new:Cell = {
+    id: uuid(),
+    name: 'Blank',
+    pos: { x: x2, y: y2 }
+  }
+  board[x1][y1] = cell1_new
+  board[x2][y2] = cell2_new
+  return board
+}
+
+// 雷霆猛击
+// 将2个同名的cell(不一定对脸)从盘面上清除，用新生成的Blank cell替代.
+export function rm_samename_pair (cell1:Cell, cell2:Cell, board:Board2):Board2 {
+  if (cell1.name !== cell2.name) return board
   const [x1, y1, x2, y2] = [cell1.pos.x, cell1.pos.y, cell2.pos.x, cell2.pos.y]
   const cell1_new:Cell = {
     id: uuid(),

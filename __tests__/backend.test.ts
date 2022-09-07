@@ -4,14 +4,17 @@ import {
   get_trainheads,
   get_trainbody,
   move_trainbody,
+  move_trainhead,
   move_trainbody_vstp,
   train_roam,
   is_f2f,
   rm_f2f_pair,
+  rm_samename_pair,
   f2f_in_board,
   f2f_in_boards,
   find_all_chances,
-  is_movable
+  is_movable,
+  play_mp3
 } from '../helpers/hlp_yiyikan_backend'
 
 import {
@@ -110,6 +113,18 @@ test('Tesing move_trainbody()', () => {
   for (let x = 1; x <= 10; x++) console.log(retBoard3[x][9])
 })
 
+test('Tesing move_trainhead()', () => {
+  const cell1:Cell = { pos: { x: 3, y: 6 }, name: 'YiWan' }
+  const cell2:Cell = { pos: { x: 3, y: 7 }, name: 'Blank' }
+  const retBoard = move_trainhead(cell1, cell2, board_start)
+  console.log(retBoard[3]) // 观察，正确
+
+  const cell3:Cell = { pos: { x: 2, y: 5 }, name: 'YiBing' }
+  const cell4:Cell = { pos: { x: 2, y: 7 }, name: 'Blank' }
+  const retBoard2 = move_trainhead(cell3, cell4, board_start)
+  console.log(retBoard2[2]) // 观察，正确
+})
+
 test('Testing move_trainbody_vstp()', () => {
   const head: Head = {
     cell: {
@@ -195,6 +210,13 @@ test('Tesing rm_f2f_pair()', () => {
   console.log(result[9])
 })
 
+test('Tesing rm_samename_pair()', () => {
+  const cell3: Cell = { pos: { x: 6, y: 3 }, name: 'BeiFeng' }
+  const cell4: Cell = { pos: { x: 6, y: 5 }, name: 'BeiFeng' }
+  const ret_board = rm_samename_pair(cell3, cell4, board_start)
+  console.log(ret_board[6])
+})
+
 test('Testing f2f_in_board()', () => {
   const result = f2f_in_board(board_start2)
   console.log('=====f2f=====')
@@ -240,4 +262,11 @@ test('Tesing find_all_chances()', () => {
   console.log(result.chances_derived.f2f_names)
   expect(result.chances_current.f2f_names.size).toBe(3) // 当前盘面有3个机会(对脸)
   expect(result.chances_derived.f2f_names.size).toBe(3) // 衍生各种盘面中，当前盘面的对脸机会大概率也都保持.
+})
+
+test('Testing play_mp3()', () => {
+  // play_mp3('/assets/sound/shuffle_new.mp3')
+  const audio = new Audio('/assets/sound/shuffle_new.mp3')
+  audio.load()
+  audio.play()
 })

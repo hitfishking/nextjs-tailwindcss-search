@@ -5,10 +5,10 @@ import { useModel } from '../../../models/lib_usemodel'
 import { pick } from '../../../helpers/hlp_game'
 import { uuid } from '../../../helpers/hlp_yiyikan_shuffle'
 import { getCardCName } from '../../../helpers/hlp_card_names'
-import { KeysType } from '../../../types/I_YiYiKan'
+import { KeysType, GAME_STATUS } from '../../../types/I_YiYiKan'
 
 export default function ChanceInfo () {
-  const { chances, showPanel } = useModel('useGameModel', (model) => pick(model, 'chances', 'showPanel'))
+  const { chances, showPanel, gameStatus } = useModel('useGameModel', (model) => pick(model, 'chances', 'showPanel', 'gameStatus'))
   const [listChances, setListChances] = useState(false)
   const curChancesArr = chances ? Array.from(chances.chances_current.f2f_names) : []
   const derChancesArr = chances ? Array.from(chances.chances_derived.f2f_names) : []
@@ -17,12 +17,15 @@ export default function ChanceInfo () {
 		<div className='mt-2 ml-3 flex items-baseline'>
 			{(chances && derChancesArr.length > 0)
 			  ? <div className='text-green-400 text-[15px] font-semibold'>有机会！</div>
-			  : <div className='text-red-500 text-[20px] font-semibold'>没机会了!</div>}
+			  : <div className={classnames('text-red-500, text-[20px], font-semibold', { 'text-yellow-400': gameStatus === GAME_STATUS.PASS })}>
+						{(gameStatus !== GAME_STATUS.PASS) ? '没机会了!' : '清盘了！你太棒啦！'}
+					</div>
+			}
 			<button
 					className="mb-3 mt-1 ml-2 px-1 py-0 text-[2px] text-green-50 font-thin rounded border border-green-200 hover:text-white hover:bg-green-400 hover:border-transparent focus:outline-none "
 					onClick={() => { setListChances(!listChances) }}
 			>
-					列表开关
+					{listChances ? '详情-关' : '详情-开'}
 			</button>
 		</div>
   )
@@ -87,7 +90,7 @@ export default function ChanceInfo () {
   useEffect(() => setChancesList(ChancesList), [chances, showPanel, listChances]) // 子组件放到后联中渲染，解决client/server不一致警告.
 
   return (
-		<div className='bg-green-700 md:w-[338px] mx-[24px] pb-[10px] border border-solid border-green-100'>
+		<div className='bg-green-800 md:w-[338px] mx-[24px] pb-[10px] border border-solid border-green-600'>
 			{showPanel ? <PanelContent/> : <CloseInfo/>}
 		</div>
   )

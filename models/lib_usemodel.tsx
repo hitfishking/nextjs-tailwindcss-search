@@ -138,7 +138,7 @@ export function useModel (namespace: string, selector?: any) {
     // cb()就是由各个<UserComp>注册的side effect函数中定义的handler函数，调用入口在各<UserComp>侧(通过调用Update())，
     // 目的就是根据最新的dispatcher.namespace.data，更新<UserComp>组件的依赖state。
     const handler = (data: any) => {
-      // console.log('---------【setState(currentState)1】-----------------')
+      // console.log('----【setState(currentState)1】------')
       // ?为什么上面这句会导致死循环?!
       //
       if (!isMount.current) {
@@ -163,10 +163,9 @@ export function useModel (namespace: string, selector?: any) {
         // ??此句也会死循环?
         const previousState = stateRef.current
         if (!isEqual(currentState, previousState)) {
-          // !必须要有调用该函数的地方，才能有机会改变state；但要在side effect函数中调用，而不能直接在hook中调用。
-          //
+          // 必须要有调用setState()的地方，才能有机会改变state；但要在side effect函数中调用，而不能直接在hook中调用。
           setState(currentState)
-          console.log('---------【setState(currentState)2】-----------------')
+          console.log('------【setState(currentState)2】--------')
         }
       }
     }

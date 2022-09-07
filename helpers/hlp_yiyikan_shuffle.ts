@@ -74,7 +74,7 @@ export function shuffleBoard2 (): Board2 {
   for (let i = 0; i <= 10; i++) {
     shuffledBoard[i] = new Array(15) // 设数组为15列，只用[1,14]列.
   }
-  // 0行、0列上都填NO Cell.
+  // 1) 0行、0列上都填NO Cell.
   for (let i = 0; i <= 10; i++) {
     for (let j = 0; j <= 14; j++) {
       if (i === 0 || j === 0) {
@@ -86,13 +86,12 @@ export function shuffleBoard2 (): Board2 {
       }
     }
   }
-  // 由于shuffledCards里的Cell中已经有行列[1~10],[1~14]的x,y坐标，故可直接使用.
+  // 2) 由于shuffledCards里的Cell中已经有行列[1~10],[1~14]的x,y坐标，故可直接使用.
   shuffledCards.forEach((cell) => {
-    const x = cell.pos.x
-    const y = cell.pos.y
+    const [x, y] = [cell.pos.x, cell.pos.y]
     shuffledBoard[x][y] = cell
   })
-  // 补充第10行11~14位置上的Blank Cell.
+  // 3) 补充第10行11~14位置上的Blank Cell.
   for (let y = 11; y <= 14; y++) {
     shuffledBoard[10][y] = {
       id: uuid(),

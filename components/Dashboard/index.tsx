@@ -4,7 +4,7 @@ import ControlPanel from './ControlPanel'
 
 export default function Dashboard () {
   return (
-		<div className='bg-yellow-200 flex'>
+		<div className='bg-green-900 flex'>
 			<ControlPanel/>
 			<ChanceInfo/>
 		</div>

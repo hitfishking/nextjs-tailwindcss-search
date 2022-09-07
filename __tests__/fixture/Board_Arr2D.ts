@@ -1,10 +1,11 @@
 import { Board, Board2 } from '../../types/I_YiYiKan'
+import { uuid } from '../../helpers/hlp_yiyikan_shuffle'
 
 function Board_to_Board2 (board:Board):Board2 {
   return board.map((aLine, idx1) => {
     return aLine.map((name, idx2) => {
       return {
-        // id: uuid(),
+        id: uuid(),
         name: board[idx1][idx2],
         pos: { x: idx1, y: idx2 }
       }
@@ -46,7 +47,7 @@ const board_start2 = Board_to_Board2(board_start_arr2)
 
 // 用于多boards测试
 // 将9行7列的ErWan改成DongFeng，多一个对脸机会。
-const board_start_arr3:Board = [
+const board_start_arr3: Board = [
   ['NO', 'NO', 'NO', 'NO', 'NO', 'NO', 'NO', 'NO', 'NO', 'NO', 'NO', 'NO', 'NO', 'NO', 'NO'],
   ['NO', 'Blank', 'BaWan', 'JiuBing', 'JiuTiao', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'QiWan', 'SanBing', 'Blank', 'Blank'],
   ['NO', 'Blank', 'YaoJi', 'Blank', 'Bai', 'YiBing', 'Blank', 'Blank', 'Zhong', 'Blank', 'LiuWan', 'YaoJi', 'Blank', 'Blank', 'YaoJi'],
@@ -61,4 +62,20 @@ const board_start_arr3:Board = [
 ]
 const board_start3 = Board_to_Board2(board_start_arr3)
 
-export { board_start, board_start2, board_start3 }
+// 构造一个只剩一对牌牌的准空board，用于测试EndGame时的庆祝画面.
+const board_2cardsleft_arr: Board = [
+  ['NO', 'NO', 'NO', 'NO', 'NO', 'NO', 'NO', 'NO', 'NO', 'NO', 'NO', 'NO', 'NO', 'NO', 'NO'],
+  ['NO', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank'],
+  ['NO', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank'],
+  ['NO', 'Blank', 'Blank', 'Bai', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank'],
+  ['NO', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank'],
+  ['NO', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank'],
+  ['NO', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank'],
+  ['NO', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank'],
+  ['NO', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank'],
+  ['NO', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Bai', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank'],
+  ['NO', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank', 'Blank']
+]
+const board_2cardsleft = Board_to_Board2(board_2cardsleft_arr)
+
+export { board_start, board_start2, board_start3, board_2cardsleft }
