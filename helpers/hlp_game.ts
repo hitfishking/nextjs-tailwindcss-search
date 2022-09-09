@@ -14,3 +14,21 @@ export function pick<T extends Object, K extends keyof T> (obj: T, ...keys: K[])
     return prev
   }, {} as Pick<T, K>)
 }
+
+export function playAudio (name:string) {
+  let sound = null
+  switch (name) {
+    case 'shuffle':
+      sound = new Audio('/assets/sound/shuffle_new.mp3')
+      break
+    case 'f2f':
+      sound = new Audio('/assets/sound/f2f_new.mp3')
+      break
+    case 'endgame':
+      sound = new Audio('/assets/sound/endgamevoice.mp3')
+      break
+    default:
+      return
+  }
+  sound.play()
+}

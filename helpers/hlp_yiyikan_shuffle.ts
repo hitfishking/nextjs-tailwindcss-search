@@ -99,6 +99,7 @@ export function shuffleBoard2 (): Board2 {
       pos: { x: 10, y }
     }
   }
-
+  // ?? 会出现pick()函数中的 TypeError: Cannot read properties of undefined (reading 'gameStatus')错误；原因不明.
+  // playAudio('shuffle')
   return shuffledBoard
 }

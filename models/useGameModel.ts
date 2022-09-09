@@ -218,6 +218,7 @@ export default function useGameModel () {
     if (threeChoiceType.left === 0) { alert('8次机会已经用完, 不能再用了!'); return }
     setThreeChoiceType({ typeId: 3, left: threeChoiceType.left - 1 })
   }, [threeChoiceType])
+
   return {
     curBoard,
 	  lastCell,

@@ -11,6 +11,7 @@ import {
   Chances
 } from '../types/I_YiYiKan'
 import { uuid } from './hlp_yiyikan_shuffle'
+import { playAudio } from './hlp_game'
 
 // 扫描整个盘面，对每个Blank cell，分析其四个方向的相邻cell，构建listHeads数组.
 export function get_trainheads (board:Board2):Head[] {
@@ -145,7 +146,10 @@ export function is_boardcleared (board:Board2):boolean {
       if (board[x][y].name !== 'Blank') nNoBlank++
     }
   }
-  if (nNoBlank === 0) return true; else return false
+  if (nNoBlank === 0) {
+    playAudio('endgame')
+    return true
+  } else { return false }
 }
 
 // 给定盘面上的一个head，整个body在head.direction方向移动一步，返回新的board+head+body。
@@ -408,6 +412,8 @@ export function rm_f2f_pair (cell1:Cell, cell2:Cell, board:Board2):Board2 {
   }
   board[x1][y1] = cell1_new
   board[x2][y2] = cell2_new
+
+  playAudio('f2f')
   return board
 }
 
@@ -428,6 +434,8 @@ export function rm_samename_pair (cell1:Cell, cell2:Cell, board:Board2):Board2 {
   }
   board[x1][y1] = cell1_new
   board[x2][y2] = cell2_new
+
+  playAudio('f2f')
   return board
 }
 
