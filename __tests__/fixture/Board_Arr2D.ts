@@ -1,6 +1,7 @@
 import { Board, Board2 } from '../../types/I_YiYiKan'
 import { uuid } from '../../helpers/hlp_yiyikan_shuffle'
 
+// 把原来纯字符串的二维数组变成{id,name,pos}对象数组.
 function Board_to_Board2 (board:Board):Board2 {
   return board.map((aLine, idx1) => {
     return aLine.map((name, idx2) => {
@@ -78,4 +79,20 @@ const board_2cardsleft_arr: Board = [
 ]
 const board_2cardsleft = Board_to_Board2(board_2cardsleft_arr)
 
-export { board_start, board_start2, board_start3, board_2cardsleft }
+// 构造一个右移move时出现消失一cell的bug标本.
+const board_xmovebug_arr: Board = [
+  ['NO', 'NO', 'NO', 'NO', 'NO', 'NO', 'NO', 'NO', 'NO', 'NO', 'NO', 'NO', 'NO', 'NO', 'NO'],
+  ['NO', 'Blank', 'Blank', 'QiTiao', 'SanBing', 'LiuBing', 'JiuWan', 'JiuBing', 'BaBing', 'JiuBing', 'Blank', 'SiBing', 'Fa', 'SanBing', 'JiuWan'],
+  ['NO', 'Blank', 'SanTiao', 'SiTiao', 'JiuTiao', 'QiWan', 'SiTiao', 'WuBing', 'SanTiao', 'YiWan', 'BaBing', 'BeiFeng', 'ErWan', 'BaBing', 'JiuTiao'],
+  ['NO', 'YiBing', 'SanTiao', 'ErWan', 'SanTiao', 'WuTiao', 'QiTiao', 'YaoJi', 'ErWan', 'WuBing', 'Bai', 'Fa', 'SanBing', 'Zhong', 'LiuWan'],
+  ['NO', 'BaTiao', 'Fa', 'LiuWan', 'NanFeng', 'DongFeng', 'BaWan', 'LiuTiao', 'BaWan', 'BaTiao', 'WuBing', 'SiBing', 'BaBing', 'LiuBing', 'WuBing'],
+  ['NO', 'DongFeng', 'YiWan', 'YiBing', 'Zhong', 'QiWan', 'DongFeng', 'YiBing', 'LiuTiao', 'Zhong', 'QiBing', 'NanFeng', 'SiWan', 'ErBing', 'XiFeng'],
+  ['NO', 'WuTiao', 'QiWan', 'JiuTiao', 'ErWan', 'SiWan', 'WuWan', 'LiuBing', 'SanWan', 'XiFeng', 'YiWan', 'XiFeng', 'YaoJi', 'SanWan', 'BaWan'],
+  ['NO', 'Bai', 'QiBing', 'BaWan', 'ErBing', 'YaoJi', 'SiBing', 'LiuTiao', 'YiBing', 'QiTiao', 'JiuWan', 'LiuBing', 'QiTiao', 'Zhong', 'LiuWan'],
+  ['NO', 'SiTiao', 'JiuBing', 'LiuWan', 'JiuWan', 'Bai', 'WuTiao', 'SanWan', 'Blank', 'Bai', 'JiuBing', 'SiBing', 'DongFeng', 'SiTiao', 'WuTiao'],
+  ['NO', 'Blank', 'Blank', 'Blank', 'YiWan', 'Fa', 'SanWan', 'Blank', 'SanBing', 'Blank', 'LiuTiao', 'Blank', 'BeiFeng', 'WuWan', 'Blank'],
+  ['NO', 'XiFeng', 'YaoJi', 'Blank', 'Blank', 'JiuTiao', 'QiWan', 'ErBing', 'Blank', 'Blank', 'ErBing', 'Blank', 'Blank', 'Blank', 'Blank']
+]
+const board_xmovebug = Board_to_Board2(board_xmovebug_arr)
+
+export { board_start, board_start2, board_start3, board_2cardsleft, board_xmovebug }

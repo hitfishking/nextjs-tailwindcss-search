@@ -1,0 +1,3 @@
+img {
+  pointer-events: none; /*disables dragging on img elements*/
+}

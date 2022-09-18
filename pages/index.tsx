@@ -1,5 +1,7 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useCallback } from 'react'
 import classnames from 'classnames'
+import Particle from 'react-tsparticles'
+import { loadFull } from 'tsparticles'
 
 import { pick } from '../helpers'
 import { useModel } from '../models/lib_usemodel'
@@ -8,6 +10,7 @@ import Header from '../components/Header'
 import Board from '../components/Board'
 import Dashboard from '../components/Dashboard'
 import { playAudio } from '../helpers/hlp_game'
+import { getParticleStyle } from '../helpers/hlp_particle_styles'
 
 export default function pageMJ () {
   const { gameStatus } = useModel('useGameModel', (model) => pick(model, 'gameStatus'))
@@ -18,15 +21,34 @@ export default function pageMJ () {
     playAudio('shuffle')
   }, [])
 
+  const particlesInit = useCallback(async (engine) => {
+    console.log(engine)
+    await loadFull(engine)
+  }, [])
+
+  const particlesLoaded = useCallback(async (container) => {
+    await console.log(container)
+  }, [])
+
   return (
 		<div className='w-full bg-green-900'>
-			<div className='md:container mx-auto md:w-[750px] md:border-4  border-solid border-green-900 rounded flex flex-col md:p-2.5 bg-green-900'>
+			<div className='md:container mx-auto md:w-[750px] md:border-4  border-solid border-green-900 rounded flex flex-col justify-center items-center md:p-2.5 bg-green-900'>
 				<Header/>
-				<div className=''>
+				<div className='relative flex flex-col justify-center items-center'>
 					<Board/>
 					<img 	src='/end_message.png'
-								className = {classnames({ invisible: gameStatus !== GAME_STATUS.PASS })}
-								style={{ position: 'absolute', left: 150, top: 210 }}/>
+								className = {classnames('absolute ml-6 z-50', { invisible: gameStatus !== GAME_STATUS.PASS })} />
+					{ (gameStatus !== GAME_STATUS.PASS)
+					  ? null
+					  : <Particle
+							id="tsparticles"
+							className="fireworks absolute h-[590px] w-[672px] z-0 opacity-80"
+							init={particlesInit}
+							loaded={particlesLoaded}
+							// @ts-ignore
+							options={getParticleStyle(-1)}
+						/>
+					}
 				</div>
 				<Dashboard/>
 			</div>

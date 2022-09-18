@@ -5,5 +5,5 @@ import useGameModel from '../models/useGameModel'
 
 test('Show the starter borad', () => {
   const { result } = renderHook(() => useGameModel())
-  console.log(result.current.board_start)
+  // console.log(result.current.board_start)
 })

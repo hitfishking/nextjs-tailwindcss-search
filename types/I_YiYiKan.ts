@@ -24,6 +24,13 @@ export type Head = {
   direction: Direction
 }
 
+export type MoveInfoType = {
+	isMovable: boolean,
+	direction: Direction,
+	span: number,
+	body: Cell[]
+}
+
 export type Chances = {
   f2f_names: Set<string>
   f2f_arr: Array<[Cell, Cell]> // 同值牌对脸的机会可能不止一个，故机会中保留"脸对"数组。
@@ -34,6 +41,10 @@ export type AllChances = {
 	chances_current: Chances
 }
 
+export type ThreeChoiceType = {
+	typeId: 0|1|2|3;
+	left: number
+}
 // -------------------------------
 export interface IClickable {
   onClick: (e: React.MouseEvent<HTMLElement, MouseEvent>) => void

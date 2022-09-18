@@ -1,4 +1,5 @@
 import 'tailwindcss/tailwind.css'
+import './styles.css'
 import { AppProps } from 'next/app'
 
 // 模块相当于一个背景函数，导入模块时会执行一次该背景函数，相关的env都会建立起来，并与当前宿主模块关联。

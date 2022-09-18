@@ -3,6 +3,7 @@ import { board_start, board_start2, board_start3 } from './fixture/Board_Arr2D'
 import {
   get_trainheads,
   get_trainbody,
+  get_trainbody_clone,
   move_trainbody,
   move_trainhead,
   move_trainbody_vstp,
@@ -13,8 +14,7 @@ import {
   f2f_in_board,
   f2f_in_boards,
   find_all_chances,
-  is_movable,
-  play_mp3
+  is_movable
 } from '../helpers/hlp_yiyikan_backend'
 
 import {
@@ -25,7 +25,7 @@ import {
   Chances
 } from '../types/I_YiYiKan'
 
-test('Testing board_start', () => {
+test('board_start()', () => {
   expect(board_start.length).toBe(11)
   expect(board_start[1][2].name).toBe('BaWan')
   expect(board_start[9][3].name).toBe('JiuBing')
@@ -33,7 +33,7 @@ test('Testing board_start', () => {
   console.log(board_start[1][2])
 })
 
-test('Testing get_trainheads()', () => {
+test('get_trainheads()', () => {
   const train_heads = get_trainheads(board_start)
   console.log('train_heads are:')
   console.log(train_heads)
@@ -41,7 +41,7 @@ test('Testing get_trainheads()', () => {
   expect(train_heads.length).toBe(82)
 })
 
-test('Testing get_tainbody()', () => {
+test('get_trainbody()', () => {
   const head: Head = {
     cell: {
       name: 'YiWan',
@@ -54,6 +54,7 @@ test('Testing get_tainbody()', () => {
   const body = get_trainbody(head, board_start)
   // console.log('body is =====')
   // console.log(body)
+  const body_rmid = body.map((cell) => { return { pos: cell.pos, name: cell.name } }) // 去掉id字段
   const res = [
     { pos: { x: 3, y: 6 }, name: 'YiWan' },
     { pos: { x: 3, y: 5 }, name: 'BaTiao' },
@@ -62,22 +63,48 @@ test('Testing get_tainbody()', () => {
     { pos: { x: 3, y: 2 }, name: 'Zhong' },
     { pos: { x: 3, y: 1 }, name: 'ErTiao' }
   ]
-  expect(body).toStrictEqual(res)
+  expect(body_rmid).toStrictEqual(res)
 })
 
-test('Testing is_movable()', () => {
+test('get_trainbody_clone()', () => {
+  const head: Head = {
+    cell: {
+      name: 'YiWan',
+      pos: { x: 3, y: 6 }
+    },
+    direction: 'Right'
+  }
+
+  // 可以考虑先写测试，再写函数，测试确定了函数理想的对外接口模式.
+  const body = get_trainbody_clone(head, board_start)
+  // console.log('body is =====')
+  // console.log(body)
+  const body_rmid = body.map((cell) => { return { pos: cell.pos, name: cell.name } }) // 去掉id字段
+  const res = [
+    { pos: { x: 3, y: 6 }, name: 'YiWan' },
+    { pos: { x: 3, y: 5 }, name: 'BaTiao' },
+    { pos: { x: 3, y: 4 }, name: 'DongFeng' },
+    { pos: { x: 3, y: 3 }, name: 'ErBing' },
+    { pos: { x: 3, y: 2 }, name: 'Zhong' },
+    { pos: { x: 3, y: 1 }, name: 'ErTiao' }
+  ]
+  expect(body_rmid).toStrictEqual(res)
+})
+
+test('is_movable()', () => {
   const cell_yiwan:Cell = { pos: { x: 3, y: 6 }, name: 'YiWan' }
   const cell_zhong:Cell = { pos: { x: 2, y: 7 }, name: 'Zhong' }
   const cell_blank1:Cell = { pos: { x: 3, y: 7 }, name: 'Blank' }
   const cell_blank2:Cell = { pos: { x: 1, y: 5 }, name: 'Blank' }
 
-  expect(is_movable(cell_yiwan, cell_zhong, board_start)).toBe(false)
-  expect(is_movable(cell_yiwan, cell_blank1, board_start)).toBe(true)
-  expect(is_movable(cell_blank1, cell_yiwan, board_start)).toBe(false)
-  expect(is_movable(cell_yiwan, cell_blank2, board_start)).toBe(false)
+  expect(is_movable(cell_yiwan, cell_zhong, board_start).isMovable).toBe(false)
+  expect(is_movable(cell_yiwan, cell_blank1, board_start).isMovable).toBe(true)
+  expect(is_movable(cell_blank1, cell_yiwan, board_start).isMovable).toBe(false)
+  expect(is_movable(cell_yiwan, cell_blank2, board_start).isMovable).toBe(false)
+  console.log(is_movable(cell_yiwan, cell_blank1, board_start))
 })
 
-test('Tesing move_trainbody()', () => {
+test('move_trainbody()', () => {
   const cell1:Cell = { pos: { x: 3, y: 6 }, name: 'YiWan' }
   const cell2:Cell = { pos: { x: 3, y: 7 }, name: 'Blank' }
   // const retBoard = move_trainbody(cell1, cell2, board_start)
@@ -113,7 +140,7 @@ test('Tesing move_trainbody()', () => {
   for (let x = 1; x <= 10; x++) console.log(retBoard3[x][9])
 })
 
-test('Tesing move_trainhead()', () => {
+test('move_trainhead()', () => {
   const cell1:Cell = { pos: { x: 3, y: 6 }, name: 'YiWan' }
   const cell2:Cell = { pos: { x: 3, y: 7 }, name: 'Blank' }
   const retBoard = move_trainhead(cell1, cell2, board_start)
@@ -125,7 +152,7 @@ test('Tesing move_trainhead()', () => {
   console.log(retBoard2[2]) // 观察，正确
 })
 
-test('Testing move_trainbody_vstp()', () => {
+test('move_trainbody_vstp()', () => {
   const head: Head = {
     cell: {
       name: 'YiWan',
@@ -155,8 +182,17 @@ test('Testing move_trainbody_vstp()', () => {
   const body_stp = result.body_stp
   const head_stp = result.head_stp
 
-  expect(body_stp).toStrictEqual(body_stp_should) // 如果clone的cell中生成新id，则不再匹配.
-  expect(head_stp).toStrictEqual(head_stp_should)
+  const body_stp_rmid = body_stp.map((cell) => { return { pos: cell.pos, name: cell.name } }) // 去掉id字段
+  expect(body_stp_rmid).toStrictEqual(body_stp_should) // 如果clone的cell中生成新id，则不再匹配.
+  const head_stp_rmid = {
+    cell: { name: head_stp.cell.name, pos: head_stp.cell.pos },
+    direction: head_stp.direction
+  } // 去掉id字段
+  // console.log('------head_stp_rmid------------')
+  // console.log(head_stp_rmid)
+  // console.log('------head_stp_should------------')
+  // console.log(head_stp_should)
+  expect(head_stp_rmid).toStrictEqual(head_stp_should)
 
   const stped_board_row3_should = [
     'NO',
@@ -179,13 +215,13 @@ test('Testing move_trainbody_vstp()', () => {
   expect(res_arr).toStrictEqual(stped_board_row3_should)
 })
 
-test('Testing train_roam()', () => {
+test('train_roam()', () => {
   const vboards = train_roam(board_start)
   console.log('====vboards=====')
   console.log(vboards.length) // 127
 })
 
-test('Testing is_f2f()', () => {
+test('is_f2f()', () => {
   let cell1: Cell = { pos: { x: 1, y: 2 }, name: 'BaWan' }
   let cell2: Cell = { pos: { x: 1, y: 4 }, name: 'JiuTiao' }
   expect(is_f2f(cell1, cell2, board_start2)).toBe(false)
@@ -199,7 +235,7 @@ test('Testing is_f2f()', () => {
   expect(is_f2f(cell1, cell2, board_start2)).toBe(true)
 })
 
-test('Tesing rm_f2f_pair()', () => {
+test('rm_f2f_pair()', () => {
   // const cell1: Cell = { pos: { x: 2, y: 11 }, name: 'YaoJi' }
   // const cell2: Cell = { pos: { x: 2, y: 14 }, name: 'YaoJi' }
   // const result = rm_f2f_pair(cell1, cell2, board_start2)
@@ -210,14 +246,14 @@ test('Tesing rm_f2f_pair()', () => {
   console.log(result[9])
 })
 
-test('Tesing rm_samename_pair()', () => {
+test('rm_samename_pair()', () => {
   const cell3: Cell = { pos: { x: 6, y: 3 }, name: 'BeiFeng' }
   const cell4: Cell = { pos: { x: 6, y: 5 }, name: 'BeiFeng' }
   const ret_board = rm_samename_pair(cell3, cell4, board_start)
   console.log(ret_board[6])
 })
 
-test('Testing f2f_in_board()', () => {
+test('f2f_in_board()', () => {
   const result = f2f_in_board(board_start2)
   console.log('=====f2f=====')
   console.log(result.f2f_arr)
@@ -227,7 +263,7 @@ test('Testing f2f_in_board()', () => {
   expect(result.f2f_names).toEqual(new Set(['SanBing', 'YaoJi', 'JiuBing']))
 })
 
-test('Testing f2f_in_boards()', () => {
+test('f2f_in_boards()', () => {
   const result = f2f_in_boards([board_start2, board_start3])
   console.log('=====f2f in boards=====')
   console.log(result.f2f_arr)
@@ -238,7 +274,7 @@ test('Testing f2f_in_boards()', () => {
   )
 })
 
-test('Tesing find_all_chances()', () => {
+test('find_all_chances()', () => {
   /*
   console.log(result.f2f_names)
   expect(result.f2f_names.size).toBe(1) // 1个chance
@@ -264,9 +300,10 @@ test('Tesing find_all_chances()', () => {
   expect(result.chances_derived.f2f_names.size).toBe(3) // 衍生各种盘面中，当前盘面的对脸机会大概率也都保持.
 })
 
-test('Testing play_mp3()', () => {
+test('play_mp3()', () => {
+  // 以下代码有问题，因为Audio只在浏览器中存在，在jest/nodejs环境中不存在。
   // play_mp3('/assets/sound/shuffle_new.mp3')
-  const audio = new Audio('/assets/sound/shuffle_new.mp3')
-  audio.load()
-  audio.play()
+  // const audio = new Audio('/assets/sound/shuffle_new.mp3')
+  // audio.load()
+  // audio.play()
 })

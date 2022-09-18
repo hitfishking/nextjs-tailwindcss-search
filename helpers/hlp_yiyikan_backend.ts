@@ -8,6 +8,7 @@ import {
   Cell,
   Head,
   Direction,
+  MoveInfoType,
   Chances
 } from '../types/I_YiYiKan'
 import { uuid } from './hlp_yiyikan_shuffle'
@@ -60,10 +61,7 @@ export function get_trainheads (board:Board2):Head[] {
 
 // 给定一个head和board，返回包括head在内的整个train body(Cell[]).
 // 一个Head只对应一个Body(含Head).
-export function get_trainbody (
-  head: Head,
-  board: Board2
-): Cell[] {
+export function get_trainbody (head: Head, board: Board2): Cell[] {
   const body: Cell[] = [] // body中引用的就是board中的cell，只是引用关系.
   let [x, y] = [head.cell.pos.x, head.cell.pos.y]
 
@@ -104,30 +102,84 @@ export function get_trainbody (
   return body
 }
 
+// 不同于get_trainbody(),本函数返回的body是物理clone的body，不会被board后续变化的影响；
+// 使用在is_movable()的返回对象的body字段中.
+export function get_trainbody_clone (head: Head, board: Board2): Cell[] {
+  const body: Cell[] = [] // body中存储的是clone得到的新cell.
+  let [x, y] = [head.cell.pos.x, head.cell.pos.y]
+
+  switch (head.direction) {
+    case 'Right':
+      // 方向向右，则body在左侧，所有连续的非Blank cell都是body成员。
+      while (y > 0) {
+        if (board[x][y].name === 'Blank') break
+        const cln_cell = _.cloneDeep(board[x][y])
+        body.push(cln_cell) // 数组中，越靠近车头的cell越靠前.
+        y = y - 1
+      }
+      break
+
+    case 'Left':
+      while (y <= 14) {
+        if (board[x][y].name === 'Blank') break
+        const cln_cell = _.cloneDeep(board[x][y])
+        body.push(cln_cell)
+        y = y + 1
+      }
+      break
+
+    case 'Down':
+      while (x > 0) {
+        if (board[x][y].name === 'Blank') break
+        const cln_cell = _.cloneDeep(board[x][y])
+        body.push(cln_cell)
+        x = x - 1
+      }
+      break
+
+    case 'Up':
+      while (x <= 10) {
+        if (board[x][y].name === 'Blank') break
+        const cln_cell = _.cloneDeep(board[x][y])
+        body.push(cln_cell)
+        x = x + 1
+      }
+      break
+  }
+  return body
+}
+
 type MoveStpResultType = {
 	head_stp: Head,
   body_stp: Cell[],
   board_stp: Board2
 }
 
-export function is_movable (cell1:Cell, cell2:Cell, board:Board2):boolean {
-  if (cell1.name === 'Blank' || cell2.name !== 'Blank') return false
-  if (cell1.pos.x !== cell2.pos.x && cell1.pos.y !== cell2.pos.y) return false // 不同行不同列,false
+export function is_movable (cell1:Cell, cell2:Cell, board:Board2):MoveInfoType {
+  const falseResult: MoveInfoType = { isMovable: false, direction: 'Up', span: 0, body: [] }
+  if (cell1.name === 'Blank' || cell2.name !== 'Blank') return falseResult
+  if (cell1.pos.x !== cell2.pos.x && cell1.pos.y !== cell2.pos.y) return falseResult // 不同行不同列
+  if (cell1.pos.x === cell2.pos.x && cell1.pos.y === cell2.pos.y) return falseResult // 位置重合,不可移动
   const [x1, x2, y1, y2] = [cell1.pos.x, cell2.pos.x, cell1.pos.y, cell2.pos.y]
   const arrCell:Cell[] = []
+  let direction:Direction = 'Up' // 临时赋个值,下面代码会用计算值替代
 
   // 提取区间内的全部 Cell.
   if (x1 !== x2) { // 不同行，则同列
     if (x1 < x2) {
+      direction = 'Down'
       for (let i = x1 + 1; i < x2; i++) arrCell.push(board[i][y1])
     } else {
+      direction = 'Up'
       for (let i = x2 + 1; i < x1; i++) arrCell.push(board[i][y1])
     }
   }
   if (y1 !== y2) { // 不同列，则同行
     if (y1 < y2) {
+      direction = 'Right'
       for (let j = y1 + 1; j < y2; j++) arrCell.push(board[x1][j])
     } else {
+      direction = 'Left'
       for (let j = y2 + 1; j < y1; j++) arrCell.push(board[x1][j])
     }
   }
@@ -136,7 +188,18 @@ export function is_movable (cell1:Cell, cell2:Cell, board:Board2):boolean {
   arrCell.forEach((cell) => {
     if (cell.name !== 'Blank') iCountNotBlank++
   })
-  if (iCountNotBlank === 0) return true; else return false
+  if (iCountNotBlank !== 0) return falseResult
+
+  // ===0，说明无障碍，可移动；构建Head，获取body
+  const head : Head = { direction, cell: _.cloneDeep(cell1) } // head也clone一个，防止board变化影响它
+  const body = get_trainbody_clone(head, board) // 虽然head,body都是clone的，但其中的pos和id并未变化.
+
+  return {
+    isMovable: true,
+    direction,
+    span: arrCell.length + 1,
+    body
+  }
 }
 
 export function is_boardcleared (board:Board2):boolean {
@@ -165,7 +228,7 @@ export function move_trainbody_vstp (
 
   body.forEach((cell, idx) => {
     const cln_cell:Cell = _.cloneDeep(cell) // 对原盘面上的cell进行复制.
-    // cln_cell.id = uuid() // 为每个新clone的cell生成新的id.
+    // cln_cell.id = uuid() // uuid是给react组件渲染用的，后台计算可以不用.
     const [x, y] = [cln_cell.pos.x, cln_cell.pos.y]
 
     switch (head.direction) {
@@ -213,7 +276,7 @@ export function move_trainbody_vstp (
 // 给定当前盘面的一对(cell1，cell2)，将以cell1为head的body直接移动到cell2处，此操作直接改变原盘面.
 // [注意]: 本移动是基于用户操作，直接对原盘面的改变，与move_trainbody_vstp()进行的虚拟模拟计算只在clone后的盘面上做改变是完全不同的，二者代码是独立开发的。
 export function move_trainbody (cell1:Cell, cell2:Cell, board:Board2):Board2 {
-  if (!is_movable(cell1, cell2, board)) { return board }
+  if (!is_movable(cell1, cell2, board).isMovable) { return board }
   const [x1, y1, x2, y2] = [cell1.pos.x, cell1.pos.y, cell2.pos.x, cell2.pos.y]
 
   // 首先确定方向，进而取得body
@@ -229,13 +292,13 @@ export function move_trainbody (cell1:Cell, cell2:Cell, board:Board2):Board2 {
   const body:Cell[] = get_trainbody(head, board)
 
   // 将body内的所有元素，按方向和距离，移动特定的距离.
-  body.forEach((cell) => {
+  body.forEach((cell, idx) => {
     const [x, y] = [cell.pos.x, cell.pos.y]
     const cln_cell = _.cloneDeep(cell)
     switch (direction) {
       case 'Right':
         cln_cell.pos.y += nDist
-        board[x][y + nDist] = cln_cell
+        board[x][y + nDist] = cln_cell // 此时board的该位置已经指向新clone的cell,而body指向的仍是原cell.
         break
       case 'Left':
         cln_cell.pos.y -= nDist
@@ -250,8 +313,15 @@ export function move_trainbody (cell1:Cell, cell2:Cell, board:Board2):Board2 {
         board[x + nDist][y] = cln_cell
         break
     }
-    cell.name = 'Blank'
-    cell.id = uuid() // 移动cell，若原cell只是把name改成Blank，id并没改，导致盘面上出现重复id
+    // cell.name = 'Blank'
+    // cell.id = uuid() // 克隆cell，若原cell只是把name改成Blank，id并没改，会导致盘面上出现重复id，渲染异常.
+    // [!注意!] 克隆的cln_cell被挂在board的新位置[x,y+nDist]下，board原位置[x,y]的cell的值被设成Blank，
+    // 而该位置正是body所引用的那些原位置，所以导致body引用的cell都变成了'Blank'.
+    board[x][y].name = 'Blank'
+    board[x][y].id = uuid()
+
+    // body[idx] = cln_cell // move_trainbody()函数目的是输出新board，内部变量body和head是否正确并不在乎.
+    // if (idx === 0) { head.cell = cln_cell }
   })
 
   return board
@@ -260,7 +330,7 @@ export function move_trainbody (cell1:Cell, cell2:Cell, board:Board2):Board2 {
 // 和move_trainbody()类似，只是body用[head cell]替代，只移动head cell，body按兵不动；
 // 单枪匹马模式
 export function move_trainhead (cell1:Cell, cell2:Cell, board:Board2):Board2 {
-  if (!is_movable(cell1, cell2, board)) { return board }
+  if (!is_movable(cell1, cell2, board).isMovable) { return board }
   const [x1, y1, x2, y2] = [cell1.pos.x, cell1.pos.y, cell2.pos.x, cell2.pos.y]
 
   // 首先确定方向，进而取得body
@@ -276,7 +346,7 @@ export function move_trainhead (cell1:Cell, cell2:Cell, board:Board2):Board2 {
   const body:Cell[] = [cell1] // get_trainbody(head, board) 主要改了这2条代码
 
   // 将body内的所有元素，按方向和距离，移动特定的距离.
-  body.forEach((cell) => {
+  body.forEach((cell, idx) => {
     const [x, y] = [cell.pos.x, cell.pos.y]
     const cln_cell = _.cloneDeep(cell)
     switch (direction) {
@@ -370,6 +440,7 @@ export function train_roam (board: Board2): Board2[] {
 
 // 给定盘面上的2个cell，判断二者是否对脸.
 export function is_f2f (cell1: Cell, cell2: Cell, board:Board2): boolean {
+  if (cell1 === cell2) return false
   const [x1, x2, y1, y2] = [cell1.pos.x, cell2.pos.x, cell1.pos.y, cell2.pos.y]
   if (cell1.name !== cell2.name) return false
   if (x1 !== x2 && y1 !== y2) return false // 必须同行或同列
@@ -398,6 +469,7 @@ export function is_f2f (cell1: Cell, cell2: Cell, board:Board2): boolean {
 
 // 将2个满足f2f的cell从盘面上清除，用新生成的Blank cell替代.
 export function rm_f2f_pair (cell1:Cell, cell2:Cell, board:Board2):Board2 {
+  if (cell1 === cell2) return board
   if (!is_f2f(cell1, cell2, board)) return board
   const [x1, y1, x2, y2] = [cell1.pos.x, cell1.pos.y, cell2.pos.x, cell2.pos.y]
   const cell1_new:Cell = {
